@@ -1,0 +1,7 @@
+profile = "local-36gb"
+
+[roles]                       # per-project overrides, e.g.:
+# engineer = "api/glm"
+
+[council]
+enabled = true

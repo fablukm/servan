@@ -1,0 +1,32 @@
+schema = 1
+currency = "USD"
+
+# Keys are model ALIASES from models.toml. Per 1M tokens.
+[prices."api/opus"]
+input_per_m  = 5.00
+output_per_m = 25.00
+cached_per_m = 0.50          # cache-hit input price
+
+[prices."api/sonnet"]
+input_per_m  = 2.00          # intro until 2026-08-31, then 3.00
+output_per_m = 10.00
+cached_per_m = 0.20
+
+[prices."api/glm"]
+input_per_m  = 1.40
+output_per_m = 4.40
+
+[prices."api/kimi-code"]
+input_per_m  = 0.95
+output_per_m = 4.00
+cached_per_m = 0.19
+
+[prices."api/deepseek"]
+input_per_m  = 0.435
+output_per_m = 0.87
+
+# Shadow prices for local models: set to a cloud-equivalent to get a
+# "what local saved" panel, or 0.0 to ignore.
+[prices."local/coder"]
+input_per_m  = 0.0
+output_per_m = 0.0

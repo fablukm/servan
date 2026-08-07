@@ -1,0 +1,15 @@
+schema = 1
+
+[models]
+"local/coder"      = { provider = "ollama",    id = "qwen3.6:27b" }        # fast alt: qwen3-coder:30b (MoE); agentic alt: devstral:24b
+"local/reasoner"   = { provider = "ollama",    id = "deepseek-r1:32b", ctx = 32768 }
+"local/reviewer"   = { provider = "ollama",    id = "glm-4.7-flash" }      # alt: gpt-oss:20b
+"local/small"      = { provider = "ollama",    id = "qwen2.5-coder:7b" }
+"local/vision"     = { provider = "ollama",    id = "gemma3:27b" }
+"api/opus"         = { provider = "anthropic", id = "claude-opus-5" }
+"api/sonnet"       = { provider = "anthropic", id = "claude-sonnet-5" }
+"api/haiku"        = { provider = "anthropic", id = "claude-haiku-4-5-20251001" }
+"api/glm"          = { provider = "zai",       id = "glm-5.2" }
+"api/kimi-code"    = { provider = "moonshot",  id = "kimi-k2.7-code" }
+"api/deepseek"     = { provider = "deepseek",  id = "deepseek-v4-pro" }
+"api/qwen-vl"      = { provider = "alibaba",   id = "qwen3-vl-plus" }

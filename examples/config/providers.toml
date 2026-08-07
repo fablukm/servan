@@ -1,0 +1,33 @@
+schema = 1
+
+[providers.ollama]
+kind = "openai-compatible"
+base_url = "http://localhost:11434/v1"     # topology B: http://mac.tailnet:11434/v1
+api_key_env = ""
+api_key = "ollama"                          # literal dummy — the openai-compatible SDK errors without any key
+
+[providers.anthropic]
+kind = "builtin"
+
+[providers.openai]
+kind = "builtin"
+
+[providers.deepseek]
+kind = "openai-compatible"
+base_url = "https://api.deepseek.com/v1"
+api_key_env = "DEEPSEEK_API_KEY"
+
+[providers.moonshot]
+kind = "openai-compatible"
+base_url = "https://api.moonshot.ai/v1"
+api_key_env = "MOONSHOT_API_KEY"
+
+[providers.zai]
+kind = "openai-compatible"
+base_url = "https://api.z.ai/api/paas/v4"   # verify current path
+api_key_env = "ZAI_API_KEY"
+
+[providers.alibaba]
+kind = "openai-compatible"
+base_url = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+api_key_env = "DASHSCOPE_API_KEY"

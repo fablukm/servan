@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# core.hooksPath points here, which disables any hooks bd installed into .git/hooks —
+# so this hook takes over both duties: flush ledger state, then regenerate the status page.
+if command -v bd >/dev/null 2>&1 && [ -d .beads ]; then
+  bd sync >/dev/null 2>&1 || true          # Dolt DB -> .beads/ JSONL export
+  if git diff --cached --name-only | grep -q '^\.beads/' || ! git diff --quiet -- .beads 2>/dev/null; then
+    git add .beads
+    tools/wiki-status.sh && git add wiki/status.md
+  fi
+fi
