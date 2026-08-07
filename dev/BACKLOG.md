@@ -15,7 +15,7 @@ Tick boxes in the same commit as the work. IDs are commit prefixes: `[S-03] …`
 - [x] S-09 status backlog section + `--json` output for dashboards
 
 ## v0.3 — regression + release
-- [ ] S-10 `servan canary`: contract in DESIGN.md; worktree isolation; table output
+- [x] S-10 `servan canary`: contract in DESIGN.md; worktree isolation; table output
 - [ ] S-11 packaging: template/ as wheel data (importlib.resources), `uvx servan` works
 - [ ] S-12 dogfood: migrate THIS repo's dev flow onto servan (wiki/ + bd) and record the experience in docs/ — the showcase closer
 

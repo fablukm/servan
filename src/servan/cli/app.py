@@ -10,6 +10,7 @@ from collections.abc import Callable
 import typer
 
 from .. import __version__
+from ..canary import CanaryReport, CanaryRunner, OpenCodeTrial
 from ..config.errors import ConfigError
 from ..config.loader import ConfigLoader
 from ..config.provider import ProviderConfig, ProviderKind
@@ -175,9 +176,27 @@ def _backend_for(name: str, provider: ProviderConfig) -> VoterBackend:
 
 
 @app.command()
-def canary(role: str, candidate: str) -> None:
+def canary(ctx: typer.Context, role: str, candidate: str,
+           project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p")) -> None:
     """Golden-bead regression check before a model swap."""
-    _stub("S-10")
+    report = _guarded(_run_canary, ctx.obj, role, candidate, project)
+    typer.echo(f"canary {report.role}:")
+    typer.echo("| side | model | pass rate |")
+    typer.echo("|---|---|---|")
+    typer.echo(f"| incumbent | {report.incumbent} | {report.incumbent_pass_rate:.0%} |")
+    typer.echo(f"| candidate | {report.candidate} | {report.candidate_pass_rate:.0%} |")
+    if report.regressed:
+        typer.secho(f"regression: {report.candidate} {report.candidate_pass_rate:.0%} "
+                    f"< {report.incumbent} {report.incumbent_pass_rate:.0%}", fg="red")
+        raise typer.Exit(5)
+
+
+def _run_canary(config_dir: pathlib.Path | None, role: str, candidate: str,
+                root: pathlib.Path) -> CanaryReport:
+    loader = ConfigLoader(config_dir)
+    runner = SubprocessRunner()
+    service = CanaryRunner(loader.load_global(), OpenCodeTrial(runner), runner)
+    return service.run(root, loader.load_project(root), role, candidate)
 
 
 @app.command()
