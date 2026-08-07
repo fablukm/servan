@@ -12,7 +12,7 @@ Tick boxes in the same commit as the work. IDs are commit prefixes: `[S-03] …`
 ## v0.2 — memory hygiene, consensus
 - [x] S-07 `servan lint`: full contract; pure function core (files-in → findings-out) + thin CLI; unskip tests/test_lint.py
 - [x] S-08 `servan council`: implement OllamaVoterBackend (structured outputs from `Vote.json_schema()`) then OpenAICompatibleVoterBackend; minutes writer + CLI wiring around the already-shipped CouncilEngine (fake-backend tests exist in test_council_engine.py)
-- [ ] S-09 status backlog section + `--json` output for dashboards
+- [x] S-09 status backlog section + `--json` output for dashboards
 
 ## v0.3 — regression + release
 - [ ] S-10 `servan canary`: contract in DESIGN.md; worktree isolation; table output

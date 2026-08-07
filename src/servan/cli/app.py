@@ -96,9 +96,15 @@ def new(name: str, no_bd: bool = typer.Option(False, "--no-bd")) -> None:
 
 
 @app.command()
-def status(project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p")) -> None:
-    """Task ledger -> wiki/status.md."""
+def status(project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p"),
+           as_json: bool = typer.Option(False, "--json",
+                                        help="Print the dashboard JSON snapshot; writes nothing.")) -> None:
+    """Task ledger -> wiki/status.md (or --json stdout for dashboards)."""
     service = StatusService(BeadsLedger(project), SystemClock())
+    if as_json:
+        snapshot = _guarded(service.collect)
+        typer.echo(snapshot.to_json(), nl=False)
+        return
     target = _guarded(service.write, project)
     typer.echo(f"wrote {target}")
 

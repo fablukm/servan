@@ -1,6 +1,7 @@
 """S-04 `servan status` — acceptance: fenced sections, graceful "bd not installed"
 (exit 2 + install hint), flag-compat probe for bd status names."""
 import importlib
+import json
 import shutil
 import subprocess
 from datetime import UTC, datetime
@@ -96,6 +97,21 @@ def test_bd_not_installed_is_graceful(tmp_path, monkeypatch):
     assert result.exit_code == 2
     assert "install Beads" in result.output
     assert not (tmp_path / "wiki" / "status.md").exists()   # no partial writes
+
+
+def test_json_output_for_dashboards(tmp_path, monkeypatch):
+    cli = importlib.import_module("servan.cli.app")
+    monkeypatch.setattr(cli, "BeadsLedger", lambda root: FakeLedger())
+    monkeypatch.setattr(cli, "SystemClock", FixedClock)
+    result = CliRunner().invoke(app, ["status", "-p", str(tmp_path), "--json"])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert data["generated"] == "2026-08-07T08:57:00+00:00"
+    assert list(data["sections"]) == ["backlog", "ready", "in_flight", "closed"]
+    ready = data["sections"]["ready"]
+    assert [r["id"] for r in ready] == ["bd-a1", "bd-b2"]     # deterministic ordering
+    assert ready[0] == {"id": "bd-a1", "title": "Ready one", "status": "open", "priority": 1}
+    assert not (tmp_path / "wiki" / "status.md").exists()     # --json is side-effect free
 
 
 def test_probe_detects_status_flag_drift(tmp_path, monkeypatch):
