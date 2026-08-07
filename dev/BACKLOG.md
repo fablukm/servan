@@ -16,7 +16,7 @@ Tick boxes in the same commit as the work. IDs are commit prefixes: `[S-03] …`
 
 ## v0.3 — regression + release
 - [x] S-10 `servan canary`: contract in DESIGN.md; worktree isolation; table output
-- [x] S-11 packaging: template/ as wheel data (importlib.resources), `uvx servan` works
+- [x] S-11 packaging: template/ as wheel data (importlib.resources) so `servan new` works without a checkout; acceptance: `uv tool install git+ssh://git@github.com/<you>/servan` installs and scaffolds correctly. PRIVATE — never publish to PyPI or any index.
 - [x] S-12 dogfood: migrate THIS repo's dev flow onto servan (wiki/ + bd) and record the experience in docs/ — the showcase closer
 
 ## v0.4 — observability

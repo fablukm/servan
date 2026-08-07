@@ -21,7 +21,10 @@ layers straight at all times:
   Disambiguate by path: anything under `src/servan/template/` is L3.
 - Never run `servan new` inside this repository. Scaffold behavior is tested against
   `tmp_path` only.
-
+- **Private project.** Never publish to PyPI or any package index; never add publishing
+  workflows, `twine`, or trusted-publisher config. Distribution is exclusively
+  `uv tool install` from the private GitHub repo.
+  
 ## How to work
 
 0. This repo dogfoods servan (S-12): `wiki/` is OKF-linted (`servan lint` must stay
