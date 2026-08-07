@@ -16,3 +16,4 @@ Append-only change history (OKF reserved file). One line per event: `## [YYYY-MM
 ## [2026-08-07] packaging: template shipped as wheel data; `uvx servan` verified (S-11)
 ## [2026-08-07] dogfood: this repo adopted wiki/ + bd ledger (S-12)
 ## [2026-08-07] feature: watch warden half — daemon polls sessions, checkpoints via bd notes (S-13)
+## [2026-08-07] feature: watch exporter — verified OpenCode shapes, Prometheus /metrics, kill+respawn wired (S-15 + S-13 side effects)

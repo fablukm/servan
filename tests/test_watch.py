@@ -1,7 +1,10 @@
 """S-13 `servan watch` warden half — poll loop + side effects around the pure
 ContextWarden. SessionSource/SessionControl are faked; the OpenCode HTTP adapter
 is covered in test_exporter.py against recorded fixtures (S-15)."""
+import json
 import sys
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import pytest
 from typer.testing import CliRunner
@@ -85,9 +88,60 @@ def test_opencode_source_fails_loud_when_server_down():
         OpenCodeSessionSource("http://127.0.0.1:1", {}, timeout=0.5).sessions()
 
 
-def test_control_respawn_is_explicitly_unverified():
-    with pytest.raises(WatchError, match="unverified"):
-        OpenCodeSessionControl("http://127.0.0.1:1").respawn(_session(9_000), "note")
+class _DeadHandler(BaseHTTPRequestHandler):
+    """Every request fails — the adapter must surface it as WatchError."""
+    def do_POST(self): self.send_response(500); self.end_headers()
+    def do_DELETE(self): self.send_response(500); self.end_headers()
+    def log_message(self, *args): pass
+
+
+def test_control_respawn_runs_the_kill_respawn_protocol():
+    calls: list[tuple[str, str, dict | None]] = []
+
+    class _Handler(BaseHTTPRequestHandler):
+        def _record(self, body=None):
+            calls.append((self.command, self.path, body))
+            self.send_response(200 if self.path != "/session/ses_new/prompt_async" else 204)
+            self.end_headers()
+            if self.command == "POST" and self.path == "/session":
+                self.wfile.write(json.dumps({"id": "ses_new"}).encode())
+            elif self.command != "POST" or "prompt_async" not in self.path:
+                self.wfile.write(b"true")
+
+        def do_POST(self):
+            length = int(self.headers.get("Content-Length") or 0)
+            self._record(json.loads(self.rfile.read(length)) if length else None)
+
+        def do_DELETE(self):
+            self._record()
+
+        def log_message(self, *args): pass
+
+    server = HTTPServer(("127.0.0.1", 0), _Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        OpenCodeSessionControl(f"http://127.0.0.1:{server.server_port}").respawn(
+            _session(9_000), "warden reboot note")
+    finally:
+        server.shutdown()
+    assert calls == [
+        ("POST", "/session/s1/abort", None),
+        ("DELETE", "/session/s1", None),
+        ("POST", "/session", {"title": "warden respawn: engineer"}),
+        ("POST", "/session/ses_new/prompt_async",
+         {"agent": "engineer", "parts": [{"type": "text", "text": "warden reboot note"}]}),
+    ]
+
+
+def test_control_respawn_fails_loud_mid_sequence():
+    server = HTTPServer(("127.0.0.1", 0), _DeadHandler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        with pytest.raises(WatchError):
+            OpenCodeSessionControl(f"http://127.0.0.1:{server.server_port}").respawn(
+                _session(9_000), "note")
+    finally:
+        server.shutdown()
 
 
 def test_cli_watch_once_reports_action(cfg_dir, monkeypatch):

@@ -7,8 +7,7 @@
 
 tokens_in_context = the LAST assistant message's tokens.total (the context the next
 turn starts from). model_alias/ctx resolve via models.toml (spec.id + provider match);
-unresolvable models stay alias/ctx=None so the warden abstains (fail-safe).
-Session-control (kill/respawn) endpoints remain UNVERIFIED — respawn fails loud."""
+unresolvable models stay alias/ctx=None so the warden abstains (fail-safe)."""
 from __future__ import annotations
 
 import json
@@ -92,10 +91,34 @@ class OpenCodeSessionSource(SessionSource):
 
 
 class OpenCodeSessionControl(SessionControl):
-    def __init__(self, base_url: str) -> None:
+    """Kill+respawn protocol (S-13): abort -> delete -> create -> prompt_async with the
+    warden note. POST/DELETE /session live-verified 2026-08-07 (v1.18.15); abort and
+    prompt_async shapes per opencode.ai/docs/server (not live-tested)."""
+
+    def __init__(self, base_url: str, timeout: float = 10.0) -> None:
         self._base = base_url.rstrip("/")
+        self._timeout = timeout
 
     def respawn(self, session: AgentSession, note: str) -> None:
-        raise WatchError(f"kill+respawn for session {session.session_id} not wired — "
-                         "OpenCode session-control endpoints unverified; "
-                         "session left running, respawn manually")
+        role = session.role or "build"
+        self._request("POST", f"/session/{session.session_id}/abort")
+        self._request("DELETE", f"/session/{session.session_id}")
+        created = self._request("POST", "/session",
+                                {"title": f"warden respawn: {role}"})
+        new_id = created.get("id") if isinstance(created, dict) else None
+        if not new_id:
+            raise WatchError(f"respawn of {session.session_id}: POST /session returned no id "
+                             f"— old session already deleted; recreate manually")
+        self._request("POST", f"/session/{new_id}/prompt_async",
+                      {"agent": role, "parts": [{"type": "text", "text": note}]})
+
+    def _request(self, method: str, path: str, body: dict | None = None) -> Any:
+        data = json.dumps(body).encode() if body is not None else None
+        request = urllib.request.Request(f"{self._base}{path}", data=data, method=method,
+                                         headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(request, timeout=self._timeout) as response:
+                payload = response.read()
+        except (urllib.error.URLError, TimeoutError) as exc:
+            raise WatchError(f"session control failed: {method} {path} ({exc})") from exc
+        return json.loads(payload) if payload else None
