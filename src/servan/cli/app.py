@@ -30,6 +30,8 @@ from ..lint import LintEngine, Severity
 from ..logging_setup import configure_logging, get_logger
 from ..observability import (
     ContextWarden,
+    MetricsRegistry,
+    MetricsServer,
     OpenCodeSessionControl,
     OpenCodeSessionSource,
     WatchDaemon,
@@ -205,12 +207,15 @@ def watch(ctx: typer.Context,
           server: str = typer.Option("http://localhost:4096", "--server",
                                      help="OpenCode server base URL."),
           port: int = typer.Option(9105, "--port",
-                                   help="Prometheus exporter port (exporter lands in S-15)."),
+                                   help="Prometheus /metrics listen port."),
           once: bool = typer.Option(False, "--once", help="Single poll, print actions, exit.")) -> None:
-    """Context warden daemon: poll sessions, checkpoint/reboot on fill thresholds."""
+    """Context warden daemon + Prometheus exporter (S-15)."""
     config = _guarded(lambda: ConfigLoader(ctx.obj).load_global())
-    daemon = WatchDaemon(OpenCodeSessionSource(server), ContextWarden(config.warden),
-                         BeadsLedger(project), OpenCodeSessionControl(server))
+    registry = MetricsRegistry()
+    daemon = WatchDaemon(OpenCodeSessionSource(server, config.models),
+                         ContextWarden(config.warden),
+                         BeadsLedger(project), OpenCodeSessionControl(server),
+                         metrics=registry)
     if once:
         actions = _guarded(daemon.poll_once)
         for action in actions:
@@ -218,5 +223,11 @@ def watch(ctx: typer.Context,
         if not actions:
             typer.echo("no warden actions.")
         return
-    _log.info("watch daemon starting (server=%s, exporter port %d = S-15)", server, port)
-    _guarded(daemon.serve_forever)
+    metrics_server = MetricsServer(registry, "127.0.0.1", port)
+    metrics_server.start()
+    typer.echo(f"metrics on http://127.0.0.1:{metrics_server.port}/metrics")
+    _log.info("watch daemon starting (server=%s)", server)
+    try:
+        _guarded(daemon.serve_forever)
+    finally:
+        metrics_server.stop()

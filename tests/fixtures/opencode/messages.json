@@ -1,0 +1,109 @@
+[
+  {
+    "info": {
+      "id": "msg_fdd53cd130011A0psDTK0lM6T7",
+      "sessionID": "ses_022ac3477ffelKpvTxFIwJCLRq",
+      "role": "user",
+      "time": {
+        "created": 1786124684564
+      },
+      "summary": {
+        "diffs": []
+      },
+      "agent": "build",
+      "model": {
+        "providerID": "deepseek",
+        "modelID": "deepseek-v4-pro"
+      }
+    },
+    "parts": [
+      {
+        "id": "prt_fdd53cd26001EIWVHw0VKr7nC5",
+        "sessionID": "ses_022ac3477ffelKpvTxFIwJCLRq",
+        "messageID": "msg_fdd53cd130011A0psDTK0lM6T7",
+        "type": "text",
+        "text": "\"write a two-line python function that adds two ints\""
+      }
+    ]
+  },
+  {
+    "info": {
+      "id": "msg_fdd53d004001fP0U1jrDa87uYc",
+      "sessionID": "ses_022ac3477ffelKpvTxFIwJCLRq",
+      "role": "assistant",
+      "time": {
+        "created": 1786124685316,
+        "completed": 1786124688792
+      },
+      "parentID": "msg_fdd53cd130011A0psDTK0lM6T7",
+      "modelID": "deepseek-v4-pro",
+      "providerID": "deepseek",
+      "mode": "build",
+      "agent": "build",
+      "path": {
+        "cwd": "C:\\Users\\fablu\\ocprobe",
+        "root": "/"
+      },
+      "cost": 0.003262935,
+      "tokens": {
+        "total": 7464,
+        "input": 7427,
+        "output": 24,
+        "reasoning": 13,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "finish": "stop"
+    },
+    "parts": [
+      {
+        "id": "prt_fdd53d658001WUOx37GU9hepLG",
+        "sessionID": "ses_022ac3477ffelKpvTxFIwJCLRq",
+        "messageID": "msg_fdd53d004001fP0U1jrDa87uYc",
+        "type": "step-start"
+      },
+      {
+        "id": "prt_fdd53dc32001nApndy67MEzcLb",
+        "sessionID": "ses_022ac3477ffelKpvTxFIwJCLRq",
+        "messageID": "msg_fdd53d004001fP0U1jrDa87uYc",
+        "type": "reasoning",
+        "text": "The user wants a two-line Python function that adds two integers.",
+        "time": {
+          "start": 1786124688434,
+          "end": 1786124688606
+        }
+      },
+      {
+        "id": "prt_fdd53dce1001iAKjQiifBqT8CA",
+        "sessionID": "ses_022ac3477ffelKpvTxFIwJCLRq",
+        "messageID": "msg_fdd53d004001fP0U1jrDa87uYc",
+        "type": "text",
+        "text": "```python\ndef add(a: int, b: int) -> int:\n    return a + b\n```",
+        "time": {
+          "start": 1786124688609,
+          "end": 1786124688772
+        }
+      },
+      {
+        "id": "prt_fdd53dd8c001GFWO5jjGvSVqKK",
+        "sessionID": "ses_022ac3477ffelKpvTxFIwJCLRq",
+        "messageID": "msg_fdd53d004001fP0U1jrDa87uYc",
+        "type": "step-finish",
+        "reason": "stop",
+        "cost": 0.003262935,
+        "tokens": {
+          "total": 7464,
+          "input": 7427,
+          "output": 24,
+          "reasoning": 13,
+          "cache": {
+            "read": 0,
+            "write": 0
+          }
+        }
+      }
+    ]
+  }
+]

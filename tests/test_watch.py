@@ -1,11 +1,7 @@
 """S-13 `servan watch` warden half — poll loop + side effects around the pure
 ContextWarden. SessionSource/SessionControl are faked; the OpenCode HTTP adapter
-is tested against a fake-server double (endpoint shapes still UNVERIFIED — S-15)."""
-import json
+is covered in test_exporter.py against recorded fixtures (S-15)."""
 import sys
-import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import ClassVar
 
 import pytest
 from typer.testing import CliRunner
@@ -84,58 +80,22 @@ def test_checkpoint_without_claimed_bead_skips_note():
     assert ledger.notes == []
 
 
-class _SessionHandler(BaseHTTPRequestHandler):
-    payload: ClassVar[list[dict]] = []
-
-    def do_GET(self):
-        assert self.path == "/session"
-        body = json.dumps(self.payload).encode()
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
-
-    def log_message(self, *args): pass                  # keep test output quiet
-
-
-@pytest.fixture
-def fake_server():
-    _SessionHandler.payload = [
-        {"session_id": "s1", "role": "engineer", "model_alias": "local/coder",
-         "tokens_in_context": 7_500, "ctx": 10_000, "bead_id": "bd-1",
-         "unrelated_future_field": {"nested": True}},   # extra keys must be tolerated
-    ]
-    server = HTTPServer(("127.0.0.1", 0), _SessionHandler)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    yield f"http://127.0.0.1:{server.server_port}"
-    server.shutdown()
-
-
-def test_opencode_source_parses_fake_server_sessions(fake_server):
-    sessions = OpenCodeSessionSource(fake_server).sessions()
-    assert len(sessions) == 1
-    session = sessions[0]
-    assert session.session_id == "s1" and session.bead_id == "bd-1"
-    assert session.fill == pytest.approx(0.75)
-
-
 def test_opencode_source_fails_loud_when_server_down():
     with pytest.raises(WatchError, match="opencode serve"):
-        OpenCodeSessionSource("http://127.0.0.1:1", timeout=0.5).sessions()
+        OpenCodeSessionSource("http://127.0.0.1:1", {}, timeout=0.5).sessions()
 
 
-def test_control_respawn_is_explicitly_unverified_until_s15():
-    with pytest.raises(WatchError, match="S-15"):
+def test_control_respawn_is_explicitly_unverified():
+    with pytest.raises(WatchError, match="unverified"):
         OpenCodeSessionControl("http://127.0.0.1:1").respawn(_session(9_000), "note")
 
 
-def test_cli_watch_once_reports_action(cfg_dir, fake_server, monkeypatch):
+def test_cli_watch_once_reports_action(cfg_dir, monkeypatch):
     cli_module = sys.modules["servan.cli.app"]   # package attr `app` is the Typer instance
     monkeypatch.setattr(cli_module, "OpenCodeSessionSource",
-                        lambda base_url: FakeSource([_session(7_500)]))
+                        lambda base_url, models: FakeSource([_session(7_500)]))
     monkeypatch.setattr(cli_module, "BeadsLedger", lambda root: FakeLedger())
-    result = CliRunner().invoke(app, ["watch", "--once", "--server", fake_server])
+    result = CliRunner().invoke(app, ["watch", "--once", "--server", "http://unused"])
     assert result.exit_code == 0, result.output
     assert "checkpoint: s1" in result.output
 

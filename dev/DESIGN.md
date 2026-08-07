@@ -65,16 +65,23 @@ escalated to human · 5 canary regression.
   between rounds; deadlock → boss model → exit 4 with the unresolved question. Minutes →
   `wiki/meetings/<date>-<slug>.md` (proposal hashes, vote tables, dissent preserved).
 - **watch [--port 9105] [--project DIR ...]** — long-running: polls the OpenCode server
-  API (sessions, per-message token usage, agent+model — VERIFY endpoint shapes against
-  opencode.ai server docs, part of S-15 acceptance) and `bd --json`; serves Prometheus
-  `/metrics` (servan_tokens_total{dir}, servan_cost_usd_total via prices.toml,
-  servan_context_fill_ratio using models.toml `ctx`, servan_beads{status},
-  servan_sessions_active, servan_escalations_open, servan_bead_cycle_seconds) and
+  API (sessions, per-message token usage, agent+model) and `bd --json`; serves Prometheus
+  `/metrics` (servan_tokens_total{kind}, servan_cost_usd_total (server-reported;
+  prices.toml accounting = S-14), servan_context_fill_ratio using models.toml `ctx`,
+  servan_beads{status}, servan_sessions_active — all {project,role,model,provider};
+  servan_escalations_open + servan_bead_cycle_seconds deferred) and
   enforces the **context warden**: at `[warden].soft` fill (default 0.7) request an
   agent checkpoint (≤200-token progress note via `bd update <id> --notes`, `wip:`
   commit); at `[warden].hard` (0.85) kill + respawn the role with bead + note + linked
   wiki pages only; recycle orchestrator sessions every `[warden].recycle_beads` (10).
   Thresholds in profiles.toml `[warden]`. models.toml entries gain optional `ctx`.
+
+  Verified OpenCode server shapes (v1.18.15, probed live 2026-08-07; fixtures in
+  `tests/fixtures/opencode/`): `GET /session` → list of `{id, agent, directory, cost,
+  model: {id, providerID}, tokens: {input, output, reasoning, cache: {read, write}}}`;
+  `GET /session/{id}/message` → list of `{info: {role, modelID, providerID, cost,
+  tokens: {total, ...}}, parts}`. tokens_in_context = last assistant message's
+  `tokens.total`. Session-control (kill/respawn) endpoints: still unverified.
 - **canary ROLE CANDIDATE_ALIAS** — run beads in `tasks/golden/` on incumbent vs
   candidate in scratch worktrees; compare test pass-rate; exit 5 + table on regression.
 
@@ -146,4 +153,5 @@ The council `Vote` model doubles as the structured-output JSON schema
 - 2026-08-07 S-11 packaging: template/ moved to src/servan/template/ (git mv, history kept) so hatchling ships it as wheel data with zero build config; RepoTemplateSource -> PackagedTemplateSource resolving via importlib.resources.files + as_file — one lookup path for dev checkout and installed wheel, no fallback (fail-loud rule); smoke-verified `uvx --from dist/*.whl servan new demo --no-bd` (24/24 files, hooksPath, init commit); L3 path references updated in AGENTS.md/README/PROMPTS.
 - 2026-08-07 S-12 dogfood: repo adopted wiki/ (index/overview/log, `servan lint` clean, guard tests/test_dogfood.py) + bd 1.1.2 ledger (`bd init --skip-agents`; it auto-commits .beads/, sets core.hooksPath itself, appends .gitignore); remaining backlog lives as p4 beads, BACKLOG.md stays milestone checklist; experience in docs/dogfood.md. Dogfood caught a real bug: StatusService emitted status.md with NO OKF frontmatter so `servan lint` rejected servan's own output — fixed, status.md now carries `type: status` frontmatter in BOTH generators (StatusService + template/tools/wiki-status.sh — the same latent bug shipped to end-user projects); Clock-injected timestamps stay deterministic. bd 1.1.2 vs ~0.60: flag probe + TaskRecord parse passed unchanged.
 - 2026-08-07 S-13 `servan watch` warden half: WatchDaemon (poll_once atomic+testable; serve_forever thin loop) around the pure ContextWarden; seams package-local in observability/base.py (SessionSource/SessionControl/WatchError exit 2), matching the scaffold/ledger/council convention — superseded draft src/servan/watch.py DELETED along with its now-dead abstractions (Ledger/SessionSample/SessionSource/MetricsSink); AgentSession gains bead_id; TaskLedger gains annotate -> BeadsLedger `bd update --append-notes` (non-clobbering); OpenCodeSessionSource expects AgentSession-shaped JSON (extra keys tolerated) — ENDPOINTS STILL UNVERIFIED, S-15; OpenCodeSessionControl.respawn fails loud until then; `watch --once` CLI (exit 2 unreachable server); orchestrator recycle_beads from the DESIGN contract NOT in S-13's backlog line — deferred with the exporter half.
+- 2026-08-07 S-15 exporter half: OpenCode server shapes VERIFIED by probing a live v1.18.15 server (read-only GETs), recorded in DESIGN.md watch contract + fixtures tests/fixtures/opencode/{sessions,messages}.json (fake-server double replays them; tests never touch a live server); OpenCodeSessionSource rewritten to map the real shape (tokens_in_context = last assistant tokens.total; alias/ctx resolved via models.toml, unknown model -> abstain); AgentSession gains provider_id/directory/cost/tokens_in/out/cached; dependency-free Prometheus text exposition (MetricsRegistry deterministic render + MetricsServer stdlib http.server) — no prometheus_client dep (justification: 60 lines of stdlib beat a new dependency); daemon emits sessions_active/tokens_total/cost_usd_total/context_fill_ratio/beads{status} per poll; servan_cost_usd_total uses server-reported session.cost (prices.toml accounting stays S-14); escalations_open + bead_cycle_seconds deferred (need council/bd history seams); Grafana dashboard at examples/grafana/dashboard.json; `watch` CLI now starts MetricsServer on --port.
 - 2026-07-29 OOP refactor: pydantic v2 at all boundaries, frozen dataclasses internally, ABC extension points (Renderer/TaskLedger/LintRule/VoterBackend), one-class-per-file packages, file-only logging (typer.echo only in cli/); CouncilEngine + warden policy implemented and unit-tested (14 passed / 9 skipped).

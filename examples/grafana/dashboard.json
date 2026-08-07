@@ -1,0 +1,49 @@
+{
+  "title": "servan watch",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "tags": ["servan", "opencode"],
+  "time": {"from": "now-6h", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Context fill ratio",
+      "description": "servan_context_fill_ratio — warden soft/hard thresholds at 0.70/0.85",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [{"expr": "servan_context_fill_ratio", "legendFormat": "{{project}} / {{role}} ({{model}})", "refId": "A"}],
+      "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1}}
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Active sessions",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [{"expr": "sum by (project, role) (servan_sessions_active)", "legendFormat": "{{project}} / {{role}}", "refId": "A"}]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Tokens (cumulative)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [{"expr": "servan_tokens_total", "legendFormat": "{{project}} / {{role}} / {{kind}}", "refId": "A"}],
+      "fieldConfig": {"defaults": {"unit": "none"}}
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Cost (USD, cumulative)",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [{"expr": "servan_cost_usd_total", "legendFormat": "{{project}} / {{role}} ({{model}})", "refId": "A"}],
+      "fieldConfig": {"defaults": {"unit": "currencyUSD"}}
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Beads by status",
+      "gridPos": {"h": 6, "w": 24, "x": 0, "y": 16},
+      "targets": [{"expr": "servan_beads", "legendFormat": "{{status}}", "refId": "A"}]
+    }
+  ]
+}

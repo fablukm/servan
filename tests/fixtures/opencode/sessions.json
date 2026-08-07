@@ -1,0 +1,104 @@
+[
+  {
+    "id": "ses_022ac3477ffelKpvTxFIwJCLRq",
+    "slug": "eager-eagle",
+    "projectID": "global",
+    "directory": "C:\\Users\\fablu\\ocprobe",
+    "path": "Users/fablu/ocprobe",
+    "summary": {
+      "additions": 0,
+      "deletions": 0,
+      "files": 0
+    },
+    "cost": 0.003262935,
+    "tokens": {
+      "input": 7427,
+      "output": 24,
+      "reasoning": 13,
+      "cache": {
+        "read": 0,
+        "write": 0
+      }
+    },
+    "title": "New session - 2026-08-07T17:44:44.168Z",
+    "agent": "build",
+    "model": {
+      "id": "deepseek-v4-pro",
+      "providerID": "deepseek",
+      "variant": "default"
+    },
+    "version": "1.18.15",
+    "time": {
+      "created": 1786124684168,
+      "updated": 1786124688828
+    },
+    "permission": [
+      {
+        "permission": "question",
+        "pattern": "*",
+        "action": "deny"
+      },
+      {
+        "permission": "plan_enter",
+        "pattern": "*",
+        "action": "deny"
+      },
+      {
+        "permission": "plan_exit",
+        "pattern": "*",
+        "action": "deny"
+      }
+    ]
+  },
+  {
+    "id": "ses_022ad65e1ffeS5EAK6eJqWenXi",
+    "slug": "glowing-tiger",
+    "projectID": "global",
+    "directory": "C:\\Users\\fablu\\ocprobe",
+    "path": "Users/fablu/ocprobe",
+    "summary": {
+      "additions": 0,
+      "deletions": 0,
+      "files": 0
+    },
+    "cost": 0,
+    "tokens": {
+      "input": 0,
+      "output": 0,
+      "reasoning": 0,
+      "cache": {
+        "read": 0,
+        "write": 0
+      }
+    },
+    "title": "New session - 2026-08-07T17:43:25.983Z",
+    "agent": "build",
+    "model": {
+      "id": "deepseek-v4-pro",
+      "providerID": "deepseek",
+      "variant": "default"
+    },
+    "version": "1.18.15",
+    "time": {
+      "created": 1786124605983,
+      "updated": 1786124607116
+    },
+    "permission": [
+      {
+        "permission": "question",
+        "pattern": "*",
+        "action": "deny"
+      },
+      {
+        "permission": "plan_enter",
+        "pattern": "*",
+        "action": "deny"
+      },
+      {
+        "permission": "plan_exit",
+        "pattern": "*",
+        "action": "deny"
+      }
+    ]
+  }
+]
