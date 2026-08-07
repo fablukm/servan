@@ -144,6 +144,24 @@ def test_daemon_emits_bead_counts():
     assert 'servan_beads{status="closed"} 0' in registry.render()
 
 
+def test_cli_watch_fails_loud_when_metrics_port_taken(cfg_dir):
+    import socket
+
+    blocker = socket.socket()          # no SO_REUSEADDR: holds the port exclusively
+    blocker.bind(("127.0.0.1", 0))
+    blocker.listen()
+    try:
+        from typer.testing import CliRunner
+
+        from servan.cli import app
+        result = CliRunner().invoke(app, ["watch", "--port", str(blocker.getsockname()[1]),
+                                          "--server", "http://127.0.0.1:1"])
+        assert result.exit_code == 2
+        assert "cannot bind metrics port" in result.output
+    finally:
+        blocker.close()
+
+
 def test_metrics_server_serves_rendered_registry():
     registry = MetricsRegistry()
     registry.set("servan_sessions_active", 3, {"project": "p"})

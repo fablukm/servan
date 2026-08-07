@@ -35,6 +35,7 @@ from ..observability import (
     OpenCodeSessionControl,
     OpenCodeSessionSource,
     WatchDaemon,
+    WatchError,
 )
 from ..rendering.sync_service import SyncService
 from ..scaffold import PackagedTemplateSource, ScaffoldError, ScaffoldService
@@ -201,6 +202,17 @@ def _run_canary(config_dir: pathlib.Path | None, role: str, candidate: str,
     return service.run(root, loader.load_project(root), role, candidate)
 
 
+def _start_metrics(registry: MetricsRegistry, port: int) -> MetricsServer:
+    """Bind + start the exporter; a taken port is a user-facing config error (exit 2)."""
+    try:
+        server = MetricsServer(registry, "127.0.0.1", port)
+    except OSError as exc:
+        raise WatchError(f"cannot bind metrics port {port} ({exc}) — "
+                         "another servan watch already running?") from exc
+    server.start()
+    return server
+
+
 @app.command()
 def watch(ctx: typer.Context,
           project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p"),
@@ -223,8 +235,7 @@ def watch(ctx: typer.Context,
         if not actions:
             typer.echo("no warden actions.")
         return
-    metrics_server = MetricsServer(registry, "127.0.0.1", port)
-    metrics_server.start()
+    metrics_server = _guarded(_start_metrics, registry, port)
     typer.echo(f"metrics on http://127.0.0.1:{metrics_server.port}/metrics")
     _log.info("watch daemon starting (server=%s)", server)
     try:
