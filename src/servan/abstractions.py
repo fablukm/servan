@@ -1,24 +1,14 @@
-"""Seams. Every external dependency of a service is one of these protocols,
+"""Shared seams. Every external dependency of a service is a protocol like these,
 injected through the constructor; concrete adapters live in `infrastructure`
 or next to their service. Tests substitute doubles; the composition root
-(`cli`) wires the real graph.
+(`cli`) wires the real graph. Service-specific seams live package-locally
+(`ledger.TaskLedger`, `observability.SessionSource`, …).
 """
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 from typing import Protocol
-
-from .settings import ModelBinding, ProjectSettings, Settings
-
-
-class SettingsSource(Protocol):
-    def load(self) -> Settings: ...
-
-
-class ProjectSource(Protocol):
-    def load(self, root: Path) -> ProjectSettings: ...
 
 
 class ProcessRunner(Protocol):
@@ -28,9 +18,3 @@ class ProcessRunner(Protocol):
 
 class Clock(Protocol):
     def now(self) -> datetime: ...
-
-
-class ModelBackend(Protocol):
-    """One JSON-schema-constrained completion; the council's only model seam."""
-    def complete_json(self, binding: ModelBinding, system: str,
-                      prompt: str, schema: Mapping) -> dict: ...

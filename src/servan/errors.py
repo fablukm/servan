@@ -15,12 +15,3 @@ class ConfigError(ServanError):
 class ProcessError(ServanError):
     """An external tool (git, bd, …) failed."""
     exit_code = 1
-
-
-class NotYetImplemented(ServanError):
-    """Declared surface without an implementation yet — points at the backlog task."""
-    exit_code = 1
-
-    def __init__(self, task: str) -> None:
-        super().__init__(f"not implemented yet — {task} in dev/BACKLOG.md")
-        self.task = task

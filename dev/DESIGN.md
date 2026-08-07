@@ -97,7 +97,7 @@ Layered, constructor-injected, composition-rooted — Pythonic surface throughou
 | Layer | Modules | Rule |
 |---|---|---|
 | Values / options | `settings` (frozen dataclasses; pure resolution), `errors` (exit codes on the type) | no I/O |
-| Seams | `abstractions` (Protocols: SettingsSource, ProjectSource, ProcessRunner, Clock, ModelBackend) + package-local ABCs next to their service (`ledger.TaskLedger`, `observability.SessionSource`/`SessionControl`, …) | services depend only on these |
+| Seams | `abstractions` (Protocols: ProcessRunner, Clock) + package-local ABCs next to their service (`ledger.TaskLedger`, `observability.SessionSource`/`SessionControl`, …) | services depend only on these |
 | Adapters | `infrastructure` (SubprocessRunner, SystemClock), `config` repositories, `status.BeadsCliLedger`, `scaffold.PackagedTemplateSource` | one external system per class |
 | Services | `sync.SyncService`, `scaffold.ScaffoldService`, `status.StatusService`, `lint.LintService` (+ LintRule pipeline), `council.CouncilService`, `canary.CanaryService`, `watch.WatchService` (+ pure `WardenPolicy`) | stateless; collaborators via __init__; return report/outcome values |
 | Composition root | `cli` — the only module that instantiates concrete graphs; `_guarded` maps ServanError.exit_code centrally | nothing else news up adapters |
