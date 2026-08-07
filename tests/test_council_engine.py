@@ -25,6 +25,9 @@ class _FakeBackend(VoterBackend):
         self.revisions += 1
         return proposal + f"\n<!-- revision {self.revisions} -->"
 
+    def boss_question(self, boss, topic, unresolved):
+        return "boss question"
+
 
 def _team():
     from servan.config import ModelSpec, ProviderConfig

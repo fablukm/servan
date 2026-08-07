@@ -4,6 +4,7 @@ module that instantiates concrete graphs; `_guarded` maps errors to exit codes."
 from __future__ import annotations
 
 import pathlib
+import urllib.parse
 from collections.abc import Callable
 
 import typer
@@ -11,6 +12,16 @@ import typer
 from .. import __version__
 from ..config.errors import ConfigError
 from ..config.loader import ConfigLoader
+from ..config.provider import ProviderConfig, ProviderKind
+from ..council import (
+    CouncilEngine,
+    DispatchVoterBackend,
+    MeetingMinutes,
+    MinutesWriter,
+    OllamaVoterBackend,
+    OpenAICompatibleVoterBackend,
+    VoterBackend,
+)
 from ..errors import ServanError
 from ..infrastructure import SubprocessRunner, SystemClock
 from ..ledger import BeadsLedger, LedgerError
@@ -19,6 +30,7 @@ from ..logging_setup import configure_logging, get_logger
 from ..rendering.sync_service import SyncService
 from ..scaffold import RepoTemplateSource, ScaffoldError, ScaffoldService
 from ..status import StatusService
+from ..team.resolver import Team, TeamResolver
 
 app = typer.Typer(no_args_is_help=True, add_completion=False, invoke_without_command=True,
                   help="House spirit for multi-agent coding.")
@@ -110,9 +122,50 @@ def lint(project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-
 
 
 @app.command()
-def council(spec: pathlib.Path) -> None:
+def council(ctx: typer.Context, spec: pathlib.Path,
+            project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p")) -> None:
     """Run the Delphi consensus loop over a spec."""
-    _stub("S-08")
+    path, minutes, backend, team = _guarded(_run_council, ctx.obj, spec, project)
+    typer.echo(f"{minutes.outcome}: {len(minutes.rounds)} round(s); minutes at {path}")
+    if minutes.outcome == "escalated":
+        question = _guarded(backend.boss_question, team["orchestrator"],
+                            minutes.topic, minutes.unresolved)
+        typer.secho(f"escalated to human: {question}", fg="yellow")
+        raise typer.Exit(4)
+
+
+def _run_council(config_dir: pathlib.Path | None, spec: pathlib.Path,
+                 project: pathlib.Path) -> tuple[pathlib.Path, MeetingMinutes, VoterBackend, Team]:
+    if not spec.is_file():
+        raise ConfigError(f"spec not found: {spec}")
+    loader = ConfigLoader(config_dir)
+    config = loader.load_global()
+    project_config = loader.load_project(project)
+    if not project_config.council.enabled:
+        raise ConfigError("council disabled in .servan.toml ([council].enabled = false)")
+    team = TeamResolver(config).resolve(project_config)
+    backend = _council_backend(config.council, team)
+    minutes = CouncilEngine(backend, config.council, team).run(
+        topic=spec.stem, proposal=spec.read_text(encoding="utf-8"))
+    path = MinutesWriter(SystemClock()).write(project, minutes)
+    return path, minutes, backend, team
+
+
+def _council_backend(settings, team: Team) -> VoterBackend:
+    roles = {*settings.voters, "architect", "orchestrator"} & team.keys()
+    providers = {team[role].provider_name: team[role].provider for role in sorted(roles)}
+    return DispatchVoterBackend(
+        {name: _backend_for(name, provider) for name, provider in providers.items()})
+
+
+def _backend_for(name: str, provider: ProviderConfig) -> VoterBackend:
+    if provider.kind is ProviderKind.BUILTIN:
+        raise ConfigError(
+            f"provider '{name}' is builtin — council needs an openai-compatible endpoint")
+    base_url = provider.base_url or ""
+    if urllib.parse.urlparse(base_url).port == 11434:
+        return OllamaVoterBackend(base_url.removesuffix("/v1"))
+    return OpenAICompatibleVoterBackend(provider)
 
 
 @app.command()
