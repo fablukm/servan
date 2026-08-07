@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "servan",
+  "project_id": "9164aa97-804b-4e47-b549-05c934bdfa2e"
+}
