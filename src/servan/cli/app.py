@@ -28,6 +28,12 @@ from ..infrastructure import SubprocessRunner, SystemClock
 from ..ledger import BeadsLedger, LedgerError
 from ..lint import LintEngine, Severity
 from ..logging_setup import configure_logging, get_logger
+from ..observability import (
+    ContextWarden,
+    OpenCodeSessionControl,
+    OpenCodeSessionSource,
+    WatchDaemon,
+)
 from ..rendering.sync_service import SyncService
 from ..scaffold import PackagedTemplateSource, ScaffoldError, ScaffoldService
 from ..status import StatusService
@@ -108,12 +114,6 @@ def status(project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", 
         return
     target = _guarded(service.write, project)
     typer.echo(f"wrote {target}")
-
-
-def _stub(task: str) -> None:
-    _log.warning("stub command invoked (%s)", task)
-    typer.secho(f"servan: not implemented yet — {task} in dev/BACKLOG.md", fg="yellow", err=True)
-    raise typer.Exit(1)
 
 
 @app.command()
@@ -200,6 +200,23 @@ def _run_canary(config_dir: pathlib.Path | None, role: str, candidate: str,
 
 
 @app.command()
-def watch(port: int = typer.Option(9105, "--port")) -> None:
-    """Context warden + Prometheus exporter daemon."""
-    _stub("S-13/S-15")
+def watch(ctx: typer.Context,
+          project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p"),
+          server: str = typer.Option("http://localhost:4096", "--server",
+                                     help="OpenCode server base URL."),
+          port: int = typer.Option(9105, "--port",
+                                   help="Prometheus exporter port (exporter lands in S-15)."),
+          once: bool = typer.Option(False, "--once", help="Single poll, print actions, exit.")) -> None:
+    """Context warden daemon: poll sessions, checkpoint/reboot on fill thresholds."""
+    config = _guarded(lambda: ConfigLoader(ctx.obj).load_global())
+    daemon = WatchDaemon(OpenCodeSessionSource(server), ContextWarden(config.warden),
+                         BeadsLedger(project), OpenCodeSessionControl(server))
+    if once:
+        actions = _guarded(daemon.poll_once)
+        for action in actions:
+            typer.echo(f"{action.kind.value}: {action.session_id} ({action.reason})")
+        if not actions:
+            typer.echo("no warden actions.")
+        return
+    _log.info("watch daemon starting (server=%s, exporter port %d = S-15)", server, port)
+    _guarded(daemon.serve_forever)

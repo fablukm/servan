@@ -45,3 +45,7 @@ class TaskLedger(abc.ABC):
 
     @abc.abstractmethod
     def close(self, task_id: str, reason: str) -> None: ...
+
+    @abc.abstractmethod
+    def annotate(self, task_id: str, note: str) -> None:
+        """Append a note to a task (warden checkpoint requests; never clobbers)."""

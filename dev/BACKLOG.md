@@ -20,6 +20,6 @@ Tick boxes in the same commit as the work. IDs are commit prefixes: `[S-03] …`
 - [x] S-12 dogfood: migrate THIS repo's dev flow onto servan (wiki/ + bd) and record the experience in docs/ — the showcase closer
 
 ## v0.4 — observability
-- [ ] S-13 `servan watch` warden half: session polling + side effects (checkpoint request via bd notes, kill+respawn protocol) around the already-shipped pure `ContextWarden` policy; acceptance incl. a fake-server test double
+- [x] S-13 `servan watch` warden half: session polling + side effects (checkpoint request via bd notes, kill+respawn protocol) around the already-shipped pure `ContextWarden` policy; acceptance incl. a fake-server test double
 - [ ] S-14 prices layer + cost accounting: optional prices.toml loading (shipped in config.py), pure cost function (usage × prices, cached-aware), `servan cost` CLI summary per project/role/model
 - [ ] S-15 `servan watch` exporter half: Prometheus /metrics with {project,role,model,provider} labels; VERIFY OpenCode server API usage-endpoint shapes (blocker for S-13/S-15); Grafana dashboard JSON provisioned under examples/grafana/

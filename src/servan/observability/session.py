@@ -12,6 +12,7 @@ class AgentSession(BaseModel):
     model_alias: str | None = None
     tokens_in_context: int = Field(ge=0)
     ctx: int | None = Field(default=None, ge=1024)
+    bead_id: str | None = None  # the bead this session claimed; None = not on a bead
 
     @property
     def fill(self) -> float | None:

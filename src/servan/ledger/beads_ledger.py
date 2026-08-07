@@ -60,6 +60,9 @@ class BeadsLedger(TaskLedger):
     def close(self, task_id: str, reason: str) -> None:
         self._run("close", task_id, "--reason", reason, "--json")
 
+    def annotate(self, task_id: str, note: str) -> None:
+        self._run("update", task_id, "--append-notes", note, "--json")
+
     def _run(self, *args: str) -> str:
         if shutil.which(self._exe) is None:
             raise _not_found(self._exe)

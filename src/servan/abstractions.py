@@ -5,8 +5,7 @@ or next to their service. Tests substitute doubles; the composition root
 """
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 from typing import Protocol
@@ -31,35 +30,7 @@ class Clock(Protocol):
     def now(self) -> datetime: ...
 
 
-class Ledger(Protocol):
-    """The task ledger (Beads) as the services see it."""
-    def ready(self) -> list[dict]: ...
-    def by_status(self, status: str) -> list[dict]: ...
-    def by_priority(self, priority: int) -> list[dict]: ...
-    def annotate(self, bead_id: str, note: str) -> None: ...
-
-
 class ModelBackend(Protocol):
     """One JSON-schema-constrained completion; the council's only model seam."""
     def complete_json(self, binding: ModelBinding, system: str,
                       prompt: str, schema: Mapping) -> dict: ...
-
-
-@dataclass(frozen=True, slots=True)
-class SessionSample:
-    session_id: str
-    role: str
-    model_alias: str
-    tokens_in_context: int
-    tokens_in: int
-    tokens_out: int
-    tokens_cached: int
-
-
-class SessionSource(Protocol):
-    """Live sessions (OpenCode server API adapter implements this)."""
-    def sessions(self) -> Iterable[SessionSample]: ...
-
-
-class MetricsSink(Protocol):
-    def emit(self, name: str, value: float, labels: Mapping[str, str]) -> None: ...

@@ -21,7 +21,7 @@ build-backend = "hatchling.build"
 packages = ["src/servan"]
 
 [tool.ruff.lint.flake8-bugbear]
-extend-immutable-calls = ["typer.Option", "servan.watch.WatchOptions"]
+extend-immutable-calls = ["typer.Option"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
