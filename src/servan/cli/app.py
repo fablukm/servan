@@ -8,10 +8,12 @@ import typer
 
 from .. import __version__
 from ..config.errors import ConfigError
-from ..infrastructure import SubprocessRunner
+from ..infrastructure import SubprocessRunner, SystemClock
+from ..ledger import BeadsLedger, LedgerError
 from ..logging_setup import configure_logging, get_logger
 from ..rendering.sync_service import SyncService
 from ..scaffold import RepoTemplateSource, ScaffoldError, ScaffoldService
+from ..status import StatusService
 
 app = typer.Typer(no_args_is_help=True, add_completion=False,
                   help="House spirit for multi-agent coding.")
@@ -60,9 +62,16 @@ def new(name: str, no_bd: bool = typer.Option(False, "--no-bd")) -> None:
 
 
 @app.command()
-def status() -> None:
+def status(project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p")) -> None:
     """Task ledger -> wiki/status.md."""
-    _stub("S-04")
+    service = StatusService(BeadsLedger(project), SystemClock())
+    try:
+        target = service.write(project)
+    except LedgerError as exc:
+        _log.error("status failed: %s", exc)
+        typer.secho(f"servan: {exc}", fg="red", err=True)
+        raise typer.Exit(2)
+    typer.echo(f"wrote {target}")
 
 
 @app.command()

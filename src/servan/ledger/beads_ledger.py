@@ -17,12 +17,31 @@ from .base import LedgerError, TaskLedger, TaskRecord, TaskStatus
 
 _log = get_logger("ledger.beads")
 _RECORDS = TypeAdapter(list[TaskRecord])
+_PROBED_STATUSES = (TaskStatus.IN_PROGRESS, TaskStatus.CLOSED)
+
+
+def _not_found(exe: str) -> LedgerError:
+    return LedgerError(
+        f"`{exe}` not found — install Beads (github.com/gastownhall/beads) "
+        "or use --no-bd projects")
 
 
 class BeadsLedger(TaskLedger):
     def __init__(self, root: pathlib.Path, executable: str = "bd") -> None:
         self._root = root
         self._exe = executable
+
+    def probe(self) -> None:
+        """Flag-compat check: the installed bd must accept the status names we filter on."""
+        if shutil.which(self._exe) is None:
+            raise _not_found(self._exe)
+        for status in _PROBED_STATUSES:
+            try:
+                self._run("list", "--status", status.value, "--json")
+            except LedgerError as exc:
+                raise LedgerError(
+                    f"bd rejected `--status {status.value}` ({exc}) — flag drift; "
+                    "run `bd prime` and align TaskStatus with the installed version") from exc
 
     def ready(self) -> list[TaskRecord]:
         return self._parse(self._run("ready", "--json"))
@@ -43,7 +62,7 @@ class BeadsLedger(TaskLedger):
 
     def _run(self, *args: str) -> str:
         if shutil.which(self._exe) is None:
-            raise LedgerError("`bd` not found — install Beads (github.com/gastownhall/beads) or use --no-bd projects")
+            raise _not_found(self._exe)
         proc = subprocess.run([self._exe, *args], cwd=self._root, capture_output=True, text=True)
         _log.debug("bd %s -> rc=%d", " ".join(args), proc.returncode)
         if proc.returncode != 0:

@@ -31,6 +31,10 @@ class TaskRecord(BaseModel):
 
 class TaskLedger(abc.ABC):
     @abc.abstractmethod
+    def probe(self) -> None:
+        """Fail fast (LedgerError) if the backend is missing or its CLI drifted."""
+
+    @abc.abstractmethod
     def ready(self) -> list[TaskRecord]: ...
 
     @abc.abstractmethod
