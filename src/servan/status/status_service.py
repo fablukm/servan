@@ -34,6 +34,13 @@ class StatusService:
         the only servan output allowed a timestamp)."""
         snapshot = self.collect()
         lines = [
+            "---",
+            "type: status",
+            "title: Status",
+            f"timestamp: {snapshot.generated:%Y-%m-%d}",
+            "status: current",
+            "---",
+            "",
             "# Status",
             "",
             f"_generated {snapshot.generated:%Y-%m-%d %H:%M UTC} from `bd` — do not edit_",

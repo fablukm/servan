@@ -56,6 +56,8 @@ def test_writes_fenced_sections(tmp_path, ledger):
     text = target.read_text()
     assert ledger.probed                      # flag-compat probe runs first
     assert "_generated 2026-08-07 08:57 UTC" in text
+    assert text.startswith("---\ntype: status\ntitle: Status\n"
+                           "timestamp: 2026-08-07\nstatus: current\n---")  # OKF frontmatter (S-12)
     for header in ("## Backlog (p4)", "## Ready", "## In flight", "## Recently closed"):
         assert f"{header}\n\n```" in text     # every section is fenced
     assert text.count("```") == 8             # four opened + four closed

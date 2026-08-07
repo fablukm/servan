@@ -17,7 +17,7 @@ Tick boxes in the same commit as the work. IDs are commit prefixes: `[S-03] …`
 ## v0.3 — regression + release
 - [x] S-10 `servan canary`: contract in DESIGN.md; worktree isolation; table output
 - [x] S-11 packaging: template/ as wheel data (importlib.resources), `uvx servan` works
-- [ ] S-12 dogfood: migrate THIS repo's dev flow onto servan (wiki/ + bd) and record the experience in docs/ — the showcase closer
+- [x] S-12 dogfood: migrate THIS repo's dev flow onto servan (wiki/ + bd) and record the experience in docs/ — the showcase closer
 
 ## v0.4 — observability
 - [ ] S-13 `servan watch` warden half: session polling + side effects (checkpoint request via bd notes, kill+respawn protocol) around the already-shipped pure `ContextWarden` policy; acceptance incl. a fake-server test double

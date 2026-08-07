@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 {
+  printf -- '---\ntype: status\ntitle: Status\ntimestamp: %s\nstatus: current\n---\n\n' "$(date '+%Y-%m-%d')"
   printf '# Status\n\n_generated %s from `.beads/` — do not edit_\n\n' "$(date '+%Y-%m-%d %H:%M')"
   printf '## Backlog (p4)\n\n```\n';    bd list --priority 4 | head -20;     printf '```\n\n'
   printf '## Ready\n\n```\n';           bd ready;                            printf '```\n\n'
