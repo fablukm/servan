@@ -60,8 +60,8 @@ def test_pass_rates_and_worktree_isolation(tmp_path):
     assert report.candidate_pass_rate == 0.5
     assert report.regressed
     adds = [argv for argv, _ in runner.calls if argv[:3] == ("git", "worktree", "add")]
-    removes = [argv for argv, _ in runner.calls if argv[:3] == ("git", "worktree", "remove")]
-    assert len(adds) == 2 and len(removes) == 2            # one scratch worktree per side
+    prunes = [argv for argv, _ in runner.calls if argv[:3] == ("git", "worktree", "prune")]
+    assert len(adds) == 2 and len(prunes) == 2            # one scratch worktree per side
     assert all(cwd == tmp_path for _, cwd in runner.calls)
     assert all(not Path(argv[4]).exists() for argv in adds)  # scratch cleaned up
 

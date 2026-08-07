@@ -72,7 +72,8 @@ class CanaryRunner:
         try:
             passed = sum(1 for bead in beads if self._trial.trial(scratch, bead, model))
         finally:
-            self._runner.run("git", "worktree", "remove", "--force", str(scratch), cwd=root)
+            # portable cleanup (git <2.17 has no `worktree remove`): delete, then prune
             shutil.rmtree(scratch, ignore_errors=True)
+            self._runner.run("git", "worktree", "prune", "--expire", "now", cwd=root)
         _log.info("canary %s (%s): %d/%d passed", label, model.alias, passed, len(beads))
         return passed / len(beads)
