@@ -35,8 +35,12 @@ layers straight at all times:
    `infrastructure.py` for I/O → wiring only in `composition.py` → tests against the
    interface. Do not instantiate concrete collaborators inside services.
 7. Stack: Python 3.12, `typer`, otherwise **stdlib only** (`tomllib`, `json`, `pathlib`,
-   `subprocess`, `urllib`). A new dependency requires a one-line justification in the
-   Decisions log.
+   `subprocess`, `urllib`). Current sanctioned exceptions: `pydantic` (boundary models),
+   `pyyaml` (OKF frontmatter is YAML). A new dependency requires a one-line justification
+   in the Decisions log.
+   `servan lint` tracks **OKF v0.1 Draft** (Google, Jun 2026, Apache-2.0): only `type` is
+   required; `status`/typed `links` are the documented servan extension. Migrate via lint
+   on spec bumps.
 8. Fail loud: bad config, missing file, invalid frontmatter → non-zero exit with one
    actionable line. No silent fallbacks, no partial writes.
 9. Deterministic output: stable key ordering, no timestamps except where a contract

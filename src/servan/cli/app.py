@@ -14,6 +14,7 @@ from ..config.loader import ConfigLoader
 from ..errors import ServanError
 from ..infrastructure import SubprocessRunner, SystemClock
 from ..ledger import BeadsLedger, LedgerError
+from ..lint import LintEngine, Severity
 from ..logging_setup import configure_logging, get_logger
 from ..rendering.sync_service import SyncService
 from ..scaffold import RepoTemplateSource, ScaffoldError, ScaffoldService
@@ -97,9 +98,15 @@ def _stub(task: str) -> None:
 
 
 @app.command()
-def lint() -> None:
+def lint(project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p")) -> None:
     """Validate OKF conformance, servan extension, and the wiki link graph."""
-    _stub("S-07")
+    findings = _guarded(LintEngine().run, project)
+    for finding in findings:
+        typer.echo(f"{finding.severity.value}: {finding.rule}: "
+                   f"{finding.path}: {finding.message}")
+    if any(f.severity is Severity.ERROR for f in findings):
+        raise typer.Exit(3)
+    typer.echo("lint clean." if not findings else f"{len(findings)} warning(s), no errors.")
 
 
 @app.command()
