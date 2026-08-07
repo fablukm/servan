@@ -17,9 +17,12 @@ from ..team.resolver import Team
 class RenderResult:
     path: pathlib.Path
     summary: str
+    changed: bool = True  # in check mode: desired content differs from disk (drift)
 
 
 class Renderer(abc.ABC):
     @abc.abstractmethod
-    def render(self, team: Team, config: GlobalConfig, root: pathlib.Path) -> list[RenderResult]:
-        """Write artifact(s) under `root`, deterministically. Return what was written."""
+    def render(self, team: Team, config: GlobalConfig, root: pathlib.Path,
+               *, check: bool = False) -> list[RenderResult]:
+        """Write artifact(s) under `root`, deterministically. Return what was written.
+        With check=True: diff-only — write nothing, report drift via RenderResult.changed."""

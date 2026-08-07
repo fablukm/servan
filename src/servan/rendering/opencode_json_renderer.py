@@ -15,12 +15,19 @@ _log = get_logger("rendering.opencode_json")
 
 
 class OpencodeJsonRenderer(Renderer):
-    def render(self, team: Team, config: GlobalConfig, root: pathlib.Path) -> list[RenderResult]:
+    def render(self, team: Team, config: GlobalConfig, root: pathlib.Path,
+               *, check: bool = False) -> list[RenderResult]:
         payload = self._build(team, config)
         path = root / "opencode.json"
-        path.write_text(json.dumps(payload, indent=2) + "\n")
+        desired = json.dumps(payload, indent=2) + "\n"
+        summary = f"default model {payload['model']}"
+        if check:
+            changed = not path.exists() or path.read_text() != desired
+            _log.info("check %s: %s", path, "drift" if changed else "in sync")
+            return [RenderResult(path=path, summary=summary, changed=changed)]
+        path.write_text(desired)
         _log.info("wrote %s (%d provider blocks)", path, len(payload["provider"]))
-        return [RenderResult(path=path, summary=f"default model {payload['model']}")]
+        return [RenderResult(path=path, summary=summary)]
 
     def _build(self, team: Team, config: GlobalConfig) -> dict[str, Any]:
         out: dict[str, Any] = {"$schema": "https://opencode.ai/config.json", "provider": {}}

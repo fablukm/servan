@@ -6,7 +6,7 @@ Tick boxes in the same commit as the work. IDs are commit prefixes: `[S-03] …`
 - [x] S-02 sync: opencode.json render + agent frontmatter rewrite (reference impl; add edge-case tests: missing agent file, builtin-only profile, unknown alias)
 - [x] S-03 `servan new`: contract in DESIGN.md; acceptance: creates tree, hooksPath set, hook executable, refuses non-empty dir, `--no-bd` skips ledger, works from any cwd
 - [x] S-04 `servan status`: fenced sections, graceful "bd not installed" (exit 2 + install hint), flag-compat probe for bd status names
-- [ ] S-05 CLI polish: `--version`, `--config-dir`, exit-code table honored, `servan sync --check` (diff-only, no write; exit 3 if drift)
+- [x] S-05 CLI polish: `--version`, `--config-dir`, exit-code table honored, `servan sync --check` (diff-only, no write; exit 3 if drift)
 - [ ] S-06 CI: GitHub Actions — uv, pytest, ruff; badge in README
 
 ## v0.2 — memory hygiene, consensus

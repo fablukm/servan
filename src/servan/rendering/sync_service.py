@@ -23,12 +23,13 @@ class SyncService:
             else (OpencodeJsonRenderer(), AgentFrontmatterRenderer())
         )
 
-    def sync(self, root: pathlib.Path) -> list[RenderResult]:
+    def sync(self, root: pathlib.Path, *, check: bool = False) -> list[RenderResult]:
         config = self._loader.load_global()
         project = self._loader.load_project(root)
         team = TeamResolver(config).resolve(project)
         results: list[RenderResult] = []
         for renderer in self._renderers:
-            results.extend(renderer.render(team, config, root))
-        _log.info("sync complete for %s: %d artifacts", root, len(results))
+            results.extend(renderer.render(team, config, root, check=check))
+        _log.info("sync %s for %s: %d artifacts", "check" if check else "complete",
+                  root, len(results))
         return results
