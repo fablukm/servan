@@ -20,7 +20,7 @@ class ProviderConfig(BaseModel):
     api_key: str = ""
 
     @model_validator(mode="after")
-    def _require_base_url(self) -> "ProviderConfig":
+    def _require_base_url(self) -> ProviderConfig:
         if self.kind is ProviderKind.OPENAI_COMPATIBLE and not self.base_url:
             raise ValueError("openai-compatible provider requires base_url")
         return self

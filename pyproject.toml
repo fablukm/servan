@@ -11,7 +11,7 @@ dependencies = ["typer>=0.12", "pydantic>=2.7"]
 servan = "servan.cli:app"
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "ruff>=0.6"]
 
 [build-system]
 requires = ["hatchling"]
@@ -19,6 +19,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/servan"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["typer.Option", "servan.watch.WatchOptions"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

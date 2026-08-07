@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Mapping
+from collections.abc import Mapping
 
 from .settings import ModelBinding, Settings
 from .workspace import Workspace
@@ -29,7 +29,7 @@ class OpencodeConfigRenderer:
                       if binding.provider.name == name}
             options: dict = {"baseURL": provider.base_url}
             if provider.api_key_env:
-                options["apiKey"] = "{env:%s}" % provider.api_key_env
+                options["apiKey"] = f"{{env:{provider.api_key_env}}}"
             elif provider.api_key:
                 options["apiKey"] = provider.api_key   # literal, e.g. "ollama"
             document["provider"][name] = {

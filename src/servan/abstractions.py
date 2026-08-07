@@ -5,10 +5,11 @@ or next to their service. Tests substitute doubles; the composition root
 """
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable, Mapping, Protocol
+from typing import Protocol
 
 from .settings import ModelBinding, ProjectSettings, Settings
 

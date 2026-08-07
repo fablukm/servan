@@ -1,5 +1,7 @@
 # servan
 
+[![CI](https://github.com/fablukm/servan/actions/workflows/ci.yml/badge.svg)](https://github.com/fablukm/servan/actions/workflows/ci.yml)
+
 *A house spirit for multi-agent coding.* In Swiss folklore, the servan quietly keeps the
 household running. This servan scaffolds, configures, and audits a role-split AI coding
 team (OpenCode + Ollama/APIs) — it is the thin deterministic layer around the agents,

@@ -1,4 +1,7 @@
-import pathlib, textwrap, pytest
+import textwrap
+
+import pytest
+
 
 @pytest.fixture
 def cfg_dir(tmp_path, monkeypatch):

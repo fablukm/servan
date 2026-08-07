@@ -3,7 +3,7 @@
 import importlib
 import shutil
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from typer.testing import CliRunner
@@ -41,7 +41,7 @@ class FakeLedger(TaskLedger):
 
 class FixedClock:
     def now(self) -> datetime:
-        return datetime(2026, 8, 7, 8, 57, tzinfo=timezone.utc)
+        return datetime(2026, 8, 7, 8, 57, tzinfo=UTC)
 
 
 @pytest.fixture

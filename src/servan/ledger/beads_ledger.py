@@ -63,7 +63,8 @@ class BeadsLedger(TaskLedger):
     def _run(self, *args: str) -> str:
         if shutil.which(self._exe) is None:
             raise _not_found(self._exe)
-        proc = subprocess.run([self._exe, *args], cwd=self._root, capture_output=True, text=True)
+        proc = subprocess.run([self._exe, *args], cwd=self._root,
+                              capture_output=True, text=True, check=False)
         _log.debug("bd %s -> rc=%d", " ".join(args), proc.returncode)
         if proc.returncode != 0:
             raise LedgerError(f"bd {' '.join(args)} failed: {proc.stderr.strip() or proc.stdout.strip()}")

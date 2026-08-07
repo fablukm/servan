@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.skip(reason="S-07: unskip when implementing `servan lint`")
 
 def test_valid_page_passes(): ...

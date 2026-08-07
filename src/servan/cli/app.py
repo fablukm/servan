@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import pathlib
 from collections.abc import Callable
-from typing import TypeVar
 
 import typer
 
@@ -23,10 +22,9 @@ from ..status import StatusService
 app = typer.Typer(no_args_is_help=True, add_completion=False, invoke_without_command=True,
                   help="House spirit for multi-agent coding.")
 _log = get_logger("cli")
-_T = TypeVar("_T")
 
 
-def _guarded(fn: Callable[..., _T], *args, **kwargs) -> _T:
+def _guarded[T](fn: Callable[..., T], *args, **kwargs) -> T:
     """Central exit-code guard (DESIGN.md table): known package errors -> 2,
     ServanError -> its exit_code, anything unexpected -> 1 with a logfile trace."""
     try:
@@ -37,7 +35,7 @@ def _guarded(fn: Callable[..., _T], *args, **kwargs) -> _T:
         _log.error("%s", exc)
         typer.secho(f"servan: {exc}", fg="red", err=True)
         raise typer.Exit(getattr(exc, "exit_code", 2))
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — central guard: unexpected -> exit 1 by design
         _log.exception("unexpected error")
         typer.secho(f"servan: unexpected error: {exc} (details in logfile)", fg="red", err=True)
         raise typer.Exit(1)

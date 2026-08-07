@@ -41,7 +41,7 @@ class OpencodeJsonRenderer(Renderer):
                       if m.provider_name == name}
             options: dict[str, str] = {"baseURL": provider.base_url or ""}
             if provider.api_key_env:
-                options["apiKey"] = "{env:%s}" % provider.api_key_env
+                options["apiKey"] = f"{{env:{provider.api_key_env}}}"
             elif provider.api_key:
                 options["apiKey"] = provider.api_key  # literal dummy, e.g. "ollama"
             out["provider"][name] = {"npm": "@ai-sdk/openai-compatible", "name": name,

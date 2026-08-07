@@ -21,6 +21,6 @@ class ResolvedModel:
         return f"{self.provider_name}/{self.model_id}"
 
     @classmethod
-    def from_spec(cls, alias: str, spec: ModelSpec, provider: ProviderConfig) -> "ResolvedModel":
+    def from_spec(cls, alias: str, spec: ModelSpec, provider: ProviderConfig) -> ResolvedModel:
         return cls(alias=alias, provider_name=spec.provider, provider=provider,
                    model_id=spec.id, ctx=spec.ctx)
