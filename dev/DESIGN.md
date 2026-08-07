@@ -48,7 +48,8 @@ escalated to human · 5 canary regression.
 - **new NAME [--no-bd]** — copy `template/` → `./NAME`, `git init`, set
   `core.hooksPath .githooks`, chmod hooks/tools, `bd init` unless `--no-bd`, initial
   commit `[init] servan scaffold`. Refuses non-empty target. (Template location:
-  repo-relative for now; packaging into wheel data = S-11.)
+  `src/servan/template/`, shipped as wheel package data, resolved via
+  importlib.resources — S-11.)
 - **sync** — read layers + `.servan.toml`; write `opencode.json` (providers used, `{env:VAR}`
   key refs, default model = orchestrator) and rewrite `model:` frontmatter line in
   `.opencode/agent/*.md`. Print role→model table.
@@ -85,7 +86,7 @@ Layered, constructor-injected, composition-rooted — Pythonic surface throughou
 |---|---|---|
 | Values / options | `settings` (frozen dataclasses; pure resolution), `errors` (exit codes on the type) | no I/O |
 | Seams | `abstractions` (Protocols: SettingsSource, ProjectSource, ProcessRunner, Clock, Ledger, ModelBackend, SessionSource, MetricsSink) | services depend only on these |
-| Adapters | `infrastructure` (SubprocessRunner, SystemClock), `config` repositories, `status.BeadsCliLedger`, `scaffold.RepoTemplateSource` | one external system per class |
+| Adapters | `infrastructure` (SubprocessRunner, SystemClock), `config` repositories, `status.BeadsCliLedger`, `scaffold.PackagedTemplateSource` | one external system per class |
 | Services | `sync.SyncService`, `scaffold.ScaffoldService`, `status.StatusService`, `lint.LintService` (+ LintRule pipeline), `council.CouncilService`, `canary.CanaryService`, `watch.WatchService` (+ pure `WardenPolicy`) | stateless; collaborators via __init__; return report/outcome values |
 | Composition root | `cli` — the only module that instantiates concrete graphs; `_guarded` maps ServanError.exit_code centrally | nothing else news up adapters |
 
@@ -142,4 +143,5 @@ The council `Vote` model doubles as the structured-output JSON schema
 - 2026-08-07 S-08 `servan council`: OllamaVoterBackend (native format=json_schema) + OpenAICompatibleVoterBackend (response_format json_schema, Bearer from api_key_env) behind shared `http.post_json` seam (stdlib urllib, monkeypatched in tests); agent/lane forced server-side (model self-report distrusted); DispatchVoterBackend routes per-provider (ollama = port 11434); boss_question added to VoterBackend ABC (deadlock -> orchestrator formulates the human question -> exit 4); MinutesWriter(clock) -> wiki/meetings/<date>-<slug>.md with vote tables + preserved dissent; [council].enabled=false -> exit 2.
 - 2026-08-07 S-09: backlog section already shipped with S-04 (backlog = p4); added StatusService.collect() -> StatusSnapshot (Section/StatusSnapshot value objects in status/snapshot.py) with deterministic to_json() (stable keys, id-sorted records); `status --json` prints the snapshot to stdout and writes nothing (side-effect-free dashboard polling); markdown output unchanged.
 - 2026-08-07 S-10 `servan canary`: BeadTrial ABC + OpenCodeTrial adapter (golden bead = tasks/golden/*.md, optional frontmatter `check:` defaulting to `uv run pytest -q`; `opencode run --model` flag shape UNVERIFIED — same verify-before-rely class as bd); CanaryRunner does one `git worktree add --detach` scratch per side with finally-cleanup; pass-rate table always printed, exit 5 only on regression; unknown role/alias, missing golden dir -> ConfigError exit 2.
+- 2026-08-07 S-11 packaging: template/ moved to src/servan/template/ (git mv, history kept) so hatchling ships it as wheel data with zero build config; RepoTemplateSource -> PackagedTemplateSource resolving via importlib.resources.files + as_file — one lookup path for dev checkout and installed wheel, no fallback (fail-loud rule); smoke-verified `uvx --from dist/*.whl servan new demo --no-bd` (24/24 files, hooksPath, init commit); L3 path references updated in AGENTS.md/README/PROMPTS.
 - 2026-07-29 OOP refactor: pydantic v2 at all boundaries, frozen dataclasses internally, ABC extension points (Renderer/TaskLedger/LintRule/VoterBackend), one-class-per-file packages, file-only logging (typer.echo only in cli/); CouncilEngine + warden policy implemented and unit-tested (14 passed / 9 skipped).

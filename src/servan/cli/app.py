@@ -29,7 +29,7 @@ from ..ledger import BeadsLedger, LedgerError
 from ..lint import LintEngine, Severity
 from ..logging_setup import configure_logging, get_logger
 from ..rendering.sync_service import SyncService
-from ..scaffold import RepoTemplateSource, ScaffoldError, ScaffoldService
+from ..scaffold import PackagedTemplateSource, ScaffoldError, ScaffoldService
 from ..status import StatusService
 from ..team.resolver import Team, TeamResolver
 
@@ -91,7 +91,7 @@ def sync(ctx: typer.Context,
 @app.command()
 def new(name: str, no_bd: bool = typer.Option(False, "--no-bd")) -> None:
     """Scaffold a new project from the servan template."""
-    service = ScaffoldService(RepoTemplateSource(), SubprocessRunner())
+    service = ScaffoldService(PackagedTemplateSource(), SubprocessRunner())
     target = _guarded(service.create, pathlib.Path(name), with_ledger=not no_bd)
     typer.echo(f"created {target}")
 

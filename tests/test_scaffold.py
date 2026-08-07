@@ -1,14 +1,15 @@
 """S-03 `servan new` — acceptance: creates tree, hooksPath set, hook executable,
 refuses non-empty dir, --no-bd skips ledger, works from any cwd."""
+import importlib.resources
 import os
 import pathlib
 import stat
 
 import pytest
 
-from servan.scaffold import RepoTemplateSource, ScaffoldError, ScaffoldService
+from servan.scaffold import PackagedTemplateSource, ScaffoldError, ScaffoldService
 
-TEMPLATE = pathlib.Path(__file__).resolve().parents[1] / "template"
+TEMPLATE = importlib.resources.files("servan").joinpath("template")
 
 
 class FakeRunner:
@@ -29,7 +30,7 @@ def runner():
 
 @pytest.fixture
 def service(runner):
-    return ScaffoldService(RepoTemplateSource(), runner)
+    return ScaffoldService(PackagedTemplateSource(), runner)
 
 
 def test_creates_tree(tmp_path, service, runner):

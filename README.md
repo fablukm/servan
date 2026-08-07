@@ -9,14 +9,14 @@ not an agent framework itself.
 
 > **Meta note:** this repository is itself being developed by an AI coding agent
 > (Kimi Code CLI running K3). Layer map and rules for that agent: see `AGENTS.md`.
-> The confusingly-similar files under `template/` are *product data* servan ships to
+> The confusingly-similar files under `src/servan/template/` are *product data* servan ships to
 > end-user projects — not this repo's own configuration.
 
 ## What it does
 
 | Command | Purpose |
 |---|---|
-| `servan new` | Scaffold a project from `template/` (wiki + OKF frontmatter, role agents, hooks, ledger) |
+| `servan new` | Scaffold a project from the packaged template (wiki + OKF frontmatter, role agents, hooks, ledger) |
 | `servan sync` | Render layered TOML config → `opencode.json` + per-role `model:` lines |
 | `servan status` | Task ledger (`bd`) → browsable `wiki/status.md` |
 | `servan lint` | Validate OKF frontmatter + wiki link graph (orphans, broken `supersedes`, …) |
