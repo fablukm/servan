@@ -22,6 +22,8 @@ not an agent framework itself.
 | `servan lint` | Validate OKF frontmatter + wiki link graph (orphans, broken `supersedes`, …) |
 | `servan council` | Deterministic Delphi consensus loop over a spec; minutes → `wiki/meetings/` |
 | `servan canary` | Golden-bead regression check before swapping a role's model |
+| `servan watch` | Context-warden daemon + Prometheus `/metrics` exporter |
+| `servan cost` | Usage × prices.toml accounting, per project/role/model |
 
 ## Config layers (`~/.config/servan/`)
 

@@ -36,6 +36,7 @@ from ..observability import (
     OpenCodeSessionSource,
     WatchDaemon,
     WatchError,
+    summarize,
 )
 from ..rendering.sync_service import SyncService
 from ..scaffold import PackagedTemplateSource, ScaffoldError, ScaffoldService
@@ -242,3 +243,28 @@ def watch(ctx: typer.Context,
         _guarded(daemon.serve_forever)
     finally:
         metrics_server.stop()
+
+
+@app.command()
+def cost(ctx: typer.Context,
+         server: str = typer.Option("http://localhost:4096", "--server",
+                                    help="OpenCode server base URL.")) -> None:
+    """Cost accounting: live session usage x prices.toml, per project/role/model."""
+    config = _guarded(lambda: ConfigLoader(ctx.obj).load_global())
+    source = OpenCodeSessionSource(server, config.models)
+    lines = _guarded(lambda: summarize(source.sessions(), config.prices))
+    if not config.prices:
+        typer.secho("servan: no prices.toml — every model shows n/a; "
+                    "add [prices.<alias>] input_per_m/output_per_m (shadow prices for local)",
+                    fg="yellow", err=True)
+    typer.echo(f"{'project':<20} {'role':<14} {'model':<16} {'sess':>4} "
+               f"{'tokens in/out/cached':>24} {'cost USD':>10}")
+    total = 0.0
+    for line in lines:
+        tokens = f"{line.tokens_in}/{line.tokens_out}/{line.tokens_cached}"
+        typer.echo(f"{line.project:<20.20} {line.role:<14.14} {line.model_alias:<16.16} "
+                   f"{line.sessions:>4} {tokens:>24} "
+                   f"{f'{line.cost:.4f}' if line.cost is not None else 'n/a':>10}")
+        total += line.cost or 0.0
+    typer.echo(f"{'total':<20} {'':<14} {'':<16} {sum(l.sessions for l in lines):>4} "
+               f"{'':>24} {total:>10.4f}")

@@ -53,5 +53,5 @@ layers straight at all times:
    actionable line. No silent fallbacks, no partial writes.
 9. Deterministic output: stable key ordering, no timestamps except where a contract
    specifies one — generated files must diff cleanly.
-10. Scope = the seven commands in DESIGN.md, ending at v0.3. Do not invent features,
+10. Scope = the commands in DESIGN.md (v0.1–v0.4 backlog complete). Do not invent features,
    frameworks, or abstractions beyond them.

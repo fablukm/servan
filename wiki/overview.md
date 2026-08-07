@@ -28,7 +28,8 @@ Three layers, kept separate at all times (see [index](index.md) for navigation):
 | `lint` | `servan lint` — OKF v0.1 conformance + servan extension, pure rule pipeline |
 | `council` | `servan council` — Delphi consensus, ollama/openai voter backends |
 | `canary` | `servan canary` — golden-bead regression trials in scratch worktrees |
-| `watch` | warden policy (pure); polling/exporter halves are backlog S-13/S-15 |
+| `watch` | `servan watch` — warden daemon (checkpoint/reboot) + Prometheus /metrics |
+| `observability.cost` | `servan cost` — prices.toml accounting per project/role/model |
 
 ## Exit codes
 
