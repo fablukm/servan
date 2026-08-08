@@ -6,8 +6,9 @@ and permissions come from `.opencode/agent/`; this file is the shared law.
 ## Wiki protocol (memory)
 - Before any task: read `wiki/index.md`, then only the pages it points you to.
 - Never re-derive what the wiki already knows; if the wiki is wrong, say so in your report.
-- Only the **librarian** writes `wiki/` (this binds agents — human commits are ground
-  truth and override everyone). Ingest ≤15 files per pass; append one line to `wiki/log.md`.
+- Wiki writes follow the **file-ownership table** below (this binds agents — human
+  commits are ground truth and override everyone). Librarian: ingest ≤15 files per
+  pass; append one line to `wiki/log.md`.
 - Every wiki page carries OKF v0.1 frontmatter: required `type` (+ title/tags/timestamp)
   plus the servan extension (`status`, typed `links`). Cross-reference pages with standard
   markdown links. `servan lint` validates all of it. Tracked spec: OKF v0.1 (Draft).
@@ -48,3 +49,16 @@ and permissions come from `.opencode/agent/`; this file is the shared law.
 - `raw/design/<feature>/v1,v2/…` is append-only — never overwrite a version.
 - Designer output: `specs/design/<feature>-vN.md` with an OKF `supersedes` link;
   architect emits delta beads only.
+
+## File ownership
+| Path | Owner | Notes |
+|---|---|---|
+| `wiki/vision.md`, `wiki/roadmap.md` | **product** | milestone = "sprint" |
+| `wiki/status.md` | **pre-commit hook / `servan status`** | never hand-edited |
+| `wiki/meetings/*` | **`servan council`** | minutes, dissent preserved |
+| everything else under `wiki/` | **librarian** | ingest + lint |
+| `specs/**` | **architect** (design specs: **designer**; math notes: SME agents) | |
+| `raw/**` | **human** (designs) + **`servan survey`** + **surveyor** | append-only source layer |
+| `STANDARDS.md`, `opencode.json`, `.opencode/agent/*`, `.opencode/skills/*` | **`servan sync`** | generated; edit the TOML instead |
+
+Human commits always outrank agent ownership.

@@ -35,6 +35,7 @@ Global dir: `~/.config/servan/` (override: env `SERVAN_CONFIG_DIR`, used by test
 | policy | `profiles.toml` | `[profiles.<name>]` role → alias; `[council]` defaults |
 | instance | `<repo>/.servan.toml` | profile + `[roles]` overrides + `[council].enabled` |
 | economics | `prices.toml` (optional) | `[prices.<alias>]` input_per_m / output_per_m / cached_per_m; shadow prices for local models |
+| standards | `standards/<name>.toml` (optional) | merged house rules -> generated `STANDARDS.md`; machine-checkable half feeds `servan check` (§B) |
 
 Merge: three global files (disjoint top-level keys; each asserts `schema = 1`) then
 project overrides roles. Validation (always, before any command acts): every role alias
@@ -142,7 +143,104 @@ ContextWarden (policy implemented; daemon = S-13) · `cli/` typer app (sole stdo
 The council `Vote` model doubles as the structured-output JSON schema
 (`Vote.json_schema()`). Logging: file-only via `logging_setup` (no console handlers).
 
+## A. File ownership (resolves the "only librarian writes wiki/" rule)
+
+| Path | Owner | Notes |
+|---|---|---|
+| `wiki/vision.md`, `wiki/roadmap.md` | **product** | milestone = "sprint" |
+| `wiki/status.md` | **pre-commit hook / `servan status`** | never hand-edited |
+| `wiki/meetings/*` | **`servan council`** | minutes, dissent preserved |
+| everything else under `wiki/` | **librarian** | ingest + lint |
+| `specs/**` | **architect** (design specs: **designer**; math notes: SME agents) | |
+| `raw/**` | **human** (designs) + **`servan survey`** + **surveyor** | append-only source layer |
+| `STANDARDS.md`, `opencode.json`, `.opencode/agent/*`, `.opencode/skills/*` | **`servan sync`** | generated; edit the TOML instead |
+
+Human commits always outrank agent ownership.
+
+## B. Standards layer (6th config layer)
+
+Location `~/.config/servan/standards/<name>.toml`; opt-in per project via `.servan.toml`:
+`standards = ["base", "python"]`.
+
+```toml
+schema = 1
+name = "python"
+extends = ["base"]          # depth-first; cycles are a ConfigError
+
+[principles]   rules = [...]          # list[str] -> concatenated, deduped, order preserved
+[layout]       rules = [...]
+[testing]      style = "tests-first"  required_before_commit = true  rules = [...]
+[tooling]      package_manager = "uv" linter = "ruff"
+[dependencies] policy = "..."
+[review]       must_check = [...]
+[forbidden]    literals = ["print("]  rules = [...]  exclude_paths = ["src/*/cli/*"]
+[git]          commit_prefix = "[<task-id>]"  push_by = "human"  rules = [...]
+```
+
+Merge: `extends` depth-first, then the project's list left->right; **scalars: later wins; string
+lists: concatenate + dedupe preserving first occurrence.** `StandardsRenderer` projects the merged
+result into generated `STANDARDS.md` at the project root (do-not-edit header, deterministic order).
+TOML is source of truth; markdown is what agents read; `[forbidden]`/`[tooling]` are the
+machine-checkable subset consumed by `servan check` (S-22).
+
+## C. Library — agents and skills
+
+```
+~/.config/servan/library/          (override: SERVAN_LIBRARY_DIR)
+├── agents/<name>.md               OpenCode agent files (same frontmatter as template roles)
+└── skills/<name>/SKILL.md         Agent Skills open standard, verbatim (+ optional scripts/refs)
+```
+
+```toml
+[team]
+extra_agents = ["math-sme"]        # needs a model: [roles] math-sme = "local/reasoner"
+skills       = ["react-quality"]
+```
+
+`LibraryRenderer` (a `Renderer`, runs inside `servan sync`) **copies** — never symlinks — so
+everything stays visible in git and locally editable: agents -> `.opencode/agent/<name>.md` with a
+provenance comment and the profile-assigned `model:` line; skills -> `.opencode/skills/<name>/`
+byte-identical (no header injection). Installs recorded in `.servan/library.lock.json` (name, kind,
+source, date, content hash); locally modified installs are preserved unless `--force`.
+
+Skills compatibility (verified against opencode.ai/docs/skills): OpenCode reads
+`.opencode/skills/`, `~/.config/opencode/skills/`, `.claude/skills/`, `~/.claude/skills/`,
+`.agents/skills/` — third-party Claude Code skills work unmodified. `servan library import
+--claude <path>` copies such a folder into the library as-is.
+
+## D. `servan survey` (deterministic) and `servan init` (brownfield)
+
+**survey** — pure Python, no LLM, no network. gitignore-aware file tree (depth ≤3), LOC by
+extension, dependency manifests + top-level deps, entry points, test layout, git stats (commits,
+top-20 most-changed files = hot spots, contributors), TODO/FIXME counts, 10 largest files. Writes
+`raw/survey/inventory.md` + `inventory.json`. Deterministic except one timestamp line.
+
+**init** — non-destructive scaffold of an existing repo: copies only missing template files; an
+existing `AGENTS.md` is never touched (writes `AGENTS.servan.md` + reports); `.gitignore` gets
+missing lines appended under a `# --- servan ---` marker; `bd init` when `.beads/` is absent;
+`core.hooksPath`; writes `.servan.toml`. `--dry-run` changes nothing; `--scan` also runs survey.
+Refuses when not a git repo. Idempotent: a second run is a no-op.
+
+**Onboarding chain (why it is split this way):** `servan init --scan` (machine facts) -> `@surveyor`
+reads the inventory + ≤25 targeted files -> `raw/survey/analysis.md` (hypotheses, conventions,
+risks, unknowns — each labeled hypothesis vs verified) -> `@product` interviews the human with that
+context -> `wiki/vision.md` + `wiki/roadmap.md` + backlog -> `@librarian` ingests `raw/survey/*` into
+`wiki/overview.md`, `wiki/modules/*`, `wiki/gotchas.md`. Machine facts and model hypotheses stay in
+the raw layer; only curated knowledge reaches the wiki.
+
+## E. Command contracts (additions)
+
+- **`standards list | show <name>`** — enumerate / merge-preview; exit 2 on unknown or cyclic.
+- **`library list | add <name> | remove <name> | new agent <name> | new skill <name> | import --claude <path>`** — `add` writes the `.servan.toml` entry and installs on the next `sync`; `list` shows agents and skills separately with installed/available state.
+- **`survey [--out raw/survey]`** — as above; exit 0 unless the path is unwritable.
+- **`init [--scan] [--dry-run]`** — as above; exit 2 on "not a git repo" or unresolvable conflict.
+- **`check`** — machine-checkable standards; findings -> exit 3.
+
 ## Decisions log (append-only, one line each)
+- 2026-08-07 v0.5 scope: standards layer (6th config layer, TOML source -> generated STANDARDS.md); library of reusable agents+skills (copy-not-symlink, lockfile provenance); brownfield `init`/`survey` (deterministic facts into raw/, LLM judgment on top, librarian still sole wiki writer).
+- 2026-08-07 product role is `mode: primary` because subagents cannot interview the human; it owns vision.md+roadmap.md (ownership table §A) while the architect keeps per-feature technical decomposition — no separate PM role (same working set, same failure mode).
+- 2026-08-07 skills need no format invention: verified OpenCode reads `.opencode/skills`, `.claude/skills`, `.agents/skills` per opencode.ai/docs/skills, so Agent Skills folders are stored and copied verbatim.
+- 2026-08-08 S-21: template ships product.md (mode: primary — subagents cannot interview) + surveyor.md + vision/roadmap OKF stubs; template AGENTS.md gains the §A ownership table (the librarian-only rule now points at it); index.md links vision/roadmap/overview so stubs lint warning-free; sync assigns their models via ordinary project `[roles]` overrides (TeamResolver needed no change). Docs unified: v0.5 addendum merged into DESIGN.md §A–§E + decisions log, addendum file deleted, v0.5 session prompts moved into dev/PROMPTS.md.
 - 2026-07-29 name "servan" (Swiss house spirit); typer + stdlib only; layered TOML split by change-reason; template/** declared inert data (L3) to prevent harness self-confusion.
 - 2026-07-29 doc-check: agent dir is .opencode/agent (singular; legacy plural tolerated in sync); ollama provider needs a literal apiKey; Beads is Dolt-backed w/ JSONL export (hook chains bd sync; backlog = p4, types bug|feature|task|epic|chore, ids bd-xxxx); OKF v0.1 requires only `type` — our status/typed-links are a documented extension; cross-links are plain markdown links.
 - 2026-07-29 refactor to interface-first / DI architecture (domain, abstractions, configuration, services, infrastructure, composition root, thin CLI); command contracts unchanged; 8 tests green, 14 TDD skips.

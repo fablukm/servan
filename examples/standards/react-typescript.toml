@@ -1,0 +1,52 @@
+schema = 1
+name = "react-typescript"
+extends = ["base"]
+
+[meta]
+description = "React + TypeScript house rules. Pairs with the react-quality skill, which carries the long-form guidance."
+
+[principles]
+rules = [
+  "Derive during render; useEffect is for synchronising with systems outside React only.",
+  "State lives at the lowest common ancestor; URL state belongs in the URL, not useState.",
+  "Composition over prop drilling; children over configuration props.",
+  "Server state is not client state: use the data layer, not useEffect fetching.",
+]
+
+[layout]
+rules = [
+  "One component per file, named export matching the filename.",
+  "Colocate component, styles, and test; shared primitives live in a ui/ folder.",
+]
+
+[typing]
+strictness = "strict"
+rules = [
+  "TypeScript strict mode on; no any, no non-null assertion without a comment.",
+  "Props are explicit interfaces; no React.FC.",
+]
+
+[tooling]
+package_manager = "pnpm"
+linter = "eslint"
+formatter = "prettier"
+test_runner = "vitest"
+
+[testing]
+rules = [
+  "Test behaviour through the DOM (Testing Library), never component internals.",
+  "Every interactive element is reachable by role and name in tests.",
+]
+
+[review]
+must_check = [
+  "no useEffect that only derives state",
+  "list keys are stable ids, never array indices",
+  "effects clean up subscriptions and abort in-flight requests",
+  "no direct state mutation",
+  "interactive elements are real buttons/links with accessible names",
+]
+
+[forbidden]
+literals = ["key={index}", "dangerouslySetInnerHTML", ": any"]
+exclude_paths = ["*.test.tsx", "*.test.ts"]

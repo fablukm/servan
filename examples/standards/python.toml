@@ -1,0 +1,53 @@
+schema = 1
+name = "python"
+extends = ["base"]
+
+[meta]
+description = "Python house rules: typed, pydantic at boundaries, uv + ruff + pytest."
+
+[principles]
+rules = [
+  "Data crossing a boundary is a pydantic model; internal value objects are frozen dataclasses.",
+  "Our own config models use extra='forbid'; third-party JSON uses extra='allow'.",
+  "Enums over string literals for closed sets.",
+  "Logging is file-only; console output belongs to the CLI layer alone.",
+]
+
+[layout]
+rules = [
+  "src/ layout; package name = distribution name.",
+  "from __future__ import annotations in every module.",
+]
+
+[typing]
+strictness = "full"
+rules = [
+  "Every public function and method annotates parameters and return type.",
+  "No bare Any in a public signature; justify it in the decisions log if unavoidable.",
+]
+
+[tooling]
+package_manager = "uv"
+linter = "ruff"
+test_runner = "pytest"
+lockfile = "uv.lock"
+
+[dependencies]
+policy = "stdlib first; a new dependency needs a one-line justification in the decisions log"
+
+[testing]
+rules = [
+  "pytest only; fixtures in conftest.py; no unittest.TestCase.",
+  "Pure functions are tested without tmp_path; filesystem tests use tmp_path.",
+]
+
+[review]
+must_check = [
+  "typing completeness on public surfaces",
+  "boundary data validated by a model",
+  "no console output outside the CLI layer",
+]
+
+[forbidden]
+literals = ["print(", "except: pass", "except Exception: pass"]
+exclude_paths = ["src/*/cli/*", "tests/*", "scripts/*"]

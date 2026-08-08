@@ -1,0 +1,64 @@
+schema = 1
+name = "base"
+
+[meta]
+description = "House rules for every servan project, language-agnostic."
+
+[principles]
+rules = [
+  "Config over code: behaviour comes from config layers, not constants in source.",
+  "Fail loud: invalid input exits non-zero with one actionable line; no silent fallbacks.",
+  "Deterministic output: stable ordering; no timestamps except where a contract requires one.",
+  "Pure core, effects at the edges: decision logic is value-in / value-out.",
+  "Extend by adding a file, not by editing an engine.",
+  "Every generated file carries a do-not-edit header naming its source.",
+]
+
+[layout]
+rules = [
+  "One public class per file; module name = snake_case of the class.",
+  "One package per specialty; implementations sit beside the abstraction they implement.",
+  "An abstraction may share its file with small companion value types, nothing else.",
+]
+
+[testing]
+style = "tests-first"
+required_before_commit = true
+rules = [
+  "Acceptance criteria of a task appear as test names.",
+  "Tests use fakes of the project's own abstractions, not mocks of third-party internals.",
+  "No test may require network access or a live service.",
+]
+
+[documentation]
+rules = [
+  "Every task closes with a report of at most 150 tokens.",
+  "Durable knowledge goes into wiki/ via the librarian, never only into a commit message.",
+  "A decision a reviewer would question goes into a decision page, not a code comment.",
+]
+
+[git]
+commit_prefix = "[<task-id>]"
+push_by = "human"
+rules = [
+  "Commit only when the test suite is green.",
+  "One task per commit; wiki updates commit separately.",
+]
+
+[review]
+must_check = [
+  "acceptance criteria met",
+  "no scope creep beyond files-in-scope",
+  "error paths are actionable",
+  "no secrets, keys, or tokens in source",
+  "generated files not hand-edited",
+]
+
+[forbidden]
+literals = []
+rules = [
+  "commented-out code blocks",
+  "TODO without a task id",
+  "catch-all exception handlers that swallow the error",
+]
+exclude_paths = []
