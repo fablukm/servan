@@ -21,9 +21,9 @@ layers straight at all times:
   Disambiguate by path: anything under `src/servan/template/` is L3.
 - Never run `servan new` inside this repository. Scaffold behavior is tested against
   `tmp_path` only.
-- **Private project.** Never publish to PyPI or any package index; never add publishing
-  workflows, `twine`, or trusted-publisher config. Distribution is exclusively
-  `uv tool install` from the private GitHub repo.
+- **Never publish to any package index.** No PyPI, no publishing workflows, `twine`,
+  or trusted-publisher config. The repo is intentionally **public**; distribution is
+  exclusively `uv tool install` from the GitHub repo — public ≠ indexed.
   
 ## How to work
 
@@ -38,10 +38,13 @@ layers straight at all times:
 4. `uv run pytest -q` must pass before every commit. Commit message: `[S-07] summary`.
 5. In the same commit: tick the task's checkbox in `dev/BACKLOG.md`; append one dated
    line to the Decisions log in `dev/DESIGN.md` for anything a reviewer would ask about.
-6. Follow the Architecture style section of dev/DESIGN.md exactly: interface in
-   `abstractions.py` → service with constructor injection → adapter in
-   `infrastructure.py` for I/O → wiring only in `composition.py` → tests against the
-   interface. Do not instantiate concrete collaborators inside services.
+6. Follow the Architecture section of dev/DESIGN.md exactly: shared seams are Protocols
+   in `abstractions.py`; service-specific seams are package-local ABCs beside their
+   service; services take collaborators via constructor injection; adapters (one external
+   system per class) live in `infrastructure.py` or beside their service; `cli.py` is the
+   composition root — the only module wiring concrete graphs (SyncService's self-composed
+   default renderers are the one documented exception); tests substitute fakes of our own
+   seams. Do not instantiate concrete collaborators inside services.
 7. Stack: Python 3.12, `typer`, otherwise **stdlib only** (`tomllib`, `json`, `pathlib`,
    `subprocess`, `urllib`). Current sanctioned exceptions: `pydantic` (boundary models),
    `pyyaml` (OKF frontmatter is YAML). A new dependency requires a one-line justification

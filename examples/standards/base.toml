@@ -18,7 +18,7 @@ rules = [
 rules = [
   "One public class per file; module name = snake_case of the class.",
   "One package per specialty; implementations sit beside the abstraction they implement.",
-  "An abstraction may share its file with small companion value types, nothing else.",
+  "A public class may share its file with its small companion value types, nothing else.",
 ]
 
 [testing]

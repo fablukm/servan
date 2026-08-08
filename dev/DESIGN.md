@@ -6,24 +6,6 @@ config rendering, memory hygiene, consensus, model regression. **Non-goals:** be
 agent framework, wrapping/forking OpenCode or Beads (both remain external dependencies
 invoked as CLIs), any long-running daemon.
 
-## Architecture style (binding for all new code)
-Interface-first with constructor injection, composed at a single root:
-
-| Module | Responsibility |
-|---|---|
-| `domain.py` | Immutable records, enums, exception hierarchy (`ServanError.exit_code`). No I/O. |
-| `abstractions.py` | I-prefixed ABCs — the only types services may depend on |
-| `configuration.py` | `Configuration` aggregate + TOML-backed providers (global + instance layers) |
-| `services.py` | Stateless use-case services; collaborators via constructor injection only |
-| `infrastructure.py` | Edge adapters (filesystem, JSON serialization, subprocess when it arrives) |
-| `composition.py` | Composition root — the ONLY module that instantiates concrete types |
-| `cli.py` | Presentation: thin typer mapping; `ServanError.exit_code` → process exit |
-
-Rules: new feature = interface in abstractions + service + adapter (if I/O) + wiring in
-the composition root + tests against the interface. Services never `import` from
-`infrastructure` or `composition`; nothing imports `cli`. Python conventions stay PEP 8
-(snake_case members) — the architecture is .NET-shaped, the syntax is not.
-
 ## Config layers
 Global dir: `~/.config/servan/` (override: env `SERVAN_CONFIG_DIR`, used by tests).
 
@@ -131,18 +113,28 @@ extension validity WHEN present (enum values, resolvable link targets, supersede
 still linked as current); (4) orphans (no inbound links; index/log/status exempt).
 Spec is v0.1 Draft — record the tracked version in AGENTS.md; migrate via lint on bumps.
 
-## Architecture (post-refactor)
+## Architecture (binding for all new code)
+Interface-first with constructor injection, composed at a single root (`cli/`). Rules:
+new feature = seam (shared Protocol in `abstractions.py`, or package-local ABC beside its
+service) + service + adapter if I/O (one external system per class, `infrastructure.py` or
+package-local) + wiring in the composition root + tests against the seam with fakes of our
+own abstractions. Services never `import` from `infrastructure` or `cli`; nothing imports
+`cli`. Python conventions stay PEP 8 (snake_case members).
+
 Packages (one specialty each; one public class per file): `config/` pydantic layer
 models + ConfigLoader + StandardsLoader (standards/ dir, extends merge) · `library/`
 LibraryLoader + LibraryLock (.servan/library.lock.json) + LibraryService (add/remove/new) ·
-`survey/` SurveyReport + SurveyCollector (deterministic inventory) · `team/`
+`survey/` SurveyReport + SurveyCollector (deterministic inventory) · `check/` CheckService
+(forbidden literals + tooling presence) · `team/`
 TeamResolver -> {role: ResolvedModel} · `rendering/`
-Renderer ABC + OpencodeJson/AgentFrontmatter/Standards renderers + SyncService · `ledger/`
+Renderer ABC + OpencodeJson/AgentFrontmatter/Standards/Library renderers + SyncService · `ledger/`
 TaskLedger ABC + BeadsLedger (bd --json) · `lint/` Finding/WikiPage + LintRule ABC +
 rules/ (one per file) + LintEngine · `council/` Vote/Minutes models + VoterBackend ABC
-+ ollama/openai backends + CouncilEngine (implemented, fake-backend tested) ·
-`scaffold/` `status/` `canary/` typed stubs · `observability/` AgentSession +
-ContextWarden (policy implemented; daemon = S-13) · `cli/` typer app (sole stdout).
++ ollama/openai backends + CouncilEngine ·
+`scaffold/` ScaffoldService (`new`) + InitService (`init`) + PackagedTemplateSource ·
+`status/` StatusService + snapshot models · `canary/` CanaryRunner + OpenCodeTrial ·
+`observability/` AgentSession + ContextWarden + WatchDaemon + MetricsRegistry/Server ·
+`cli/` typer app (sole stdout).
 The council `Vote` model doubles as the structured-output JSON schema
 (`Vote.json_schema()`). Logging: file-only via `logging_setup` (no console handlers).
 
@@ -274,3 +266,4 @@ the raw layer; only curated knowledge reaches the wiki.
 - 2026-08-08 S-23 template wiring: template AGENTS.md gains a "Standards & skills" section (STANDARDS.md is generated/read-only, `servan check` enforces it; .opencode/skills + .claude/skills compatibility note); template .servan.toml carries COMMENTED standards/[team] examples (commented so the default scaffold stays opt-in and ProjectConfig still validates — guarded by test); examples/ standards+library now have loadability guard tests (they are the shipped starting points users copy to ~/.config/servan).
 - 2026-08-08 S-24 README: commands table completed (init/survey/standards/check/library; sync row now lists STANDARDS.md + library installs), config-layers line gained standards + library, condensed greenfield/brownfield walkthroughs point at docs/IMPLEMENTATION-MANUAL-v05.md §5 for the long form (single source, no duplication), skills compatibility note inline under the table; v0.1->v0.5 status bump. BACKLOG COMPLETE S-01..S-24.
 - 2026-08-08 v0.5 close-out: user config seeded at ~/.config/servan (now its own git repo): missing layers copied from examples/config, standards refreshed to the S-22 include-field versions, library seeds in place; product/surveyor mapped to each profile's architect alias (local/reasoner = deepseek-r1:32b). E2E brownfield proof on a synthetic legacy repo (TEMP/notes-legacy, kept for inspection): init --scan dry-run == real run, existing AGENTS.md untouched, survey named the real hot spot, sync resolved all 12 roles + generated STANDARDS.md, check flagged the missing uv.lock/ruff config (fixed by genuinely uv-ifying the repo), surveyor/product/librarian chain executed (Kimi playing the roles — no live LLM this run), first bead claimed/tested/closed (4/4). Two by-design behaviors surfaced: keys appended after [council] in .servan.toml fail loud as council keys (the S-23 commented template shows the right spot), and lint rejects ../ links escaping wiki/+specs/ (cite outside files as code spans).
+- 2026-08-08 audit reconciliation (external review found doc drift, blamed it backwards): AGENTS.md rule 6 was a FOSSIL of the initial OOP draft (unchanged since the init commit; composition.py has never existed) — rewrote it to the real architecture; DESIGN.md's stale "Architecture style" section deleted, merged into the renamed "Architecture (binding for all new code)" section (also de-staled: check/ added, scaffold/status/canary/observability no longer "stubs/S-13"); base.toml layout rule 3 widened (companion value types may live beside ANY public class, not only abstractions — matches project_config/lockfile/report practice); repo is intentionally PUBLIC — the binding rule is index-non-publication, not privacy (AGENTS.md reworded); README config-layers line gained the prices.toml economics layer, status -> v0.5.0 released.

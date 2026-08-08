@@ -37,7 +37,8 @@ Skills need no new format: OpenCode reads `.opencode/skills/`, `.claude/skills/`
 ## Config layers (`~/.config/servan/`)
 
 identity `secrets.env` · transport `providers.toml` · inventory `models.toml` ·
-policy `profiles.toml` · instance `<repo>/.servan.toml` · standards `standards/<name>.toml`
+policy `profiles.toml` · instance `<repo>/.servan.toml` · economics `prices.toml` (optional)
+· standards `standards/<name>.toml`
 (opt-in per project) · library `library/` (reusable agents + skills) — split by *why it changes*.
 Examples in `examples/config/`, `examples/standards/`, `examples/library/`.
 
@@ -74,5 +75,5 @@ uv run pytest -q
 
 ## Status
 
-v0.5 in development. Roadmap in `dev/BACKLOG.md`; architecture in `dev/DESIGN.md`;
-background research in `docs/` (report + setup manual). MIT.
+v0.5.0 released (backlog S-01…S-24 complete). Roadmap in `dev/BACKLOG.md`; architecture in
+`dev/DESIGN.md`; background research in `docs/` (report + setup manual). MIT.
