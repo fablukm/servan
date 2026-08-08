@@ -32,6 +32,10 @@ class ConfigLoader:
     def config_dir(self) -> pathlib.Path:
         return self._dir
 
+    @property
+    def standards_dir(self) -> pathlib.Path:
+        return self._dir / "standards"
+
     def load_global(self) -> GlobalConfig:
         merged: dict[str, Any] = {}
         for layer in REQUIRED_LAYERS:

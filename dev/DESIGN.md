@@ -133,8 +133,9 @@ Spec is v0.1 Draft — record the tracked version in AGENTS.md; migrate via lint
 
 ## Architecture (post-refactor)
 Packages (one specialty each; one public class per file): `config/` pydantic layer
-models + ConfigLoader · `team/` TeamResolver -> {role: ResolvedModel} · `rendering/`
-Renderer ABC + OpencodeJson/AgentFrontmatter renderers + SyncService · `ledger/`
+models + ConfigLoader + StandardsLoader (standards/ dir, extends merge) · `team/`
+TeamResolver -> {role: ResolvedModel} · `rendering/`
+Renderer ABC + OpencodeJson/AgentFrontmatter/Standards renderers + SyncService · `ledger/`
 TaskLedger ABC + BeadsLedger (bd --json) · `lint/` Finding/WikiPage + LintRule ABC +
 rules/ (one per file) + LintEngine · `council/` Vote/Minutes models + VoterBackend ABC
 + ollama/openai backends + CouncilEngine (implemented, fake-backend tested) ·
@@ -261,3 +262,4 @@ the raw layer; only curated knowledge reaches the wiki.
 - 2026-08-07 S-14 `servan cost`: pure session_cost (cached tokens bill at cached_per_m else input rate; uncached input = max(in-cached, 0)) + summarize -> CostLine per (project, role, model), sorted, cost=None for unpriced models (CLI prints n/a — no silent zero); missing prices.toml -> warning line + all n/a (layer is optional by design); daemon's servan_cost_usd_total stays server-reported (cheaper per poll), `servan cost` is the prices.toml accounting; smoke test cross-validated: computed 0.0033 == server-reported 0.003263 for the live deepseek session.
 - 2026-08-07 e2e shakedown (full workflow against live ollama+opencode): two real portability bugs found and fixed — (1) canary cleanup used `git worktree remove` (git >=2.17); this machine has git 2.14 -> switched to rmtree + `git worktree prune --expire now`, and rmtree now runs BEFORE the raising call so cleanup can't be skipped; (2) SubprocessRunner now resolves executables via shutil.which (Windows npm shims are .cmd — CreateProcess can't find them) and maps FileNotFoundError/OSError to a fail-loud ProcessError instead of an uncaught WinError 2. NOTE: uv tool install caches wheel builds by version — use --refresh when reinstalling same-version local changes.
 - 2026-07-29 OOP refactor: pydantic v2 at all boundaries, frozen dataclasses internally, ABC extension points (Renderer/TaskLedger/LintRule/VoterBackend), one-class-per-file packages, file-only logging (typer.echo only in cli/); CouncilEngine + warden policy implemented and unit-tested (14 passed / 9 skipped).
+- 2026-08-08 S-16 standards layer: StandardsSet models sections openly (dict of str|bool|list[str]) — fixed per-section models rejected as too rigid for user-defined house rules; StandardsLoader resolves extends depth-first (cycle -> ConfigError naming the chain; unknown names the available set); Renderer ABC gains a ProjectConfig parameter — S-17's LibraryRenderer needs [team] too, so the seam is added once for both; StandardsRenderer joins SyncService's defaults (no-op when standards empty) and shares its pure render_standards_md with `servan standards show` so preview == generated file.

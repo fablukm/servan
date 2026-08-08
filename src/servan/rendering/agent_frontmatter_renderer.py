@@ -5,6 +5,7 @@ import pathlib
 import re
 
 from ..config.global_config import GlobalConfig
+from ..config.project_config import ProjectConfig
 from ..logging_setup import get_logger
 from ..team.resolver import Team
 from .base import Renderer, RenderResult
@@ -15,8 +16,8 @@ _MODEL_LINE = re.compile(r"(?m)^model:.*$")
 
 
 class AgentFrontmatterRenderer(Renderer):
-    def render(self, team: Team, config: GlobalConfig, root: pathlib.Path,
-               *, check: bool = False) -> list[RenderResult]:
+    def render(self, team: Team, config: GlobalConfig, project: ProjectConfig,
+               root: pathlib.Path, *, check: bool = False) -> list[RenderResult]:
         results: list[RenderResult] = []
         agent_dir = self._agent_dir(root)
         if agent_dir is None:

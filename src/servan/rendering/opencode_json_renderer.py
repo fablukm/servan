@@ -6,6 +6,7 @@ import pathlib
 from typing import Any
 
 from ..config.global_config import GlobalConfig
+from ..config.project_config import ProjectConfig
 from ..config.provider import ProviderKind
 from ..logging_setup import get_logger
 from ..team.resolver import Team
@@ -15,8 +16,8 @@ _log = get_logger("rendering.opencode_json")
 
 
 class OpencodeJsonRenderer(Renderer):
-    def render(self, team: Team, config: GlobalConfig, root: pathlib.Path,
-               *, check: bool = False) -> list[RenderResult]:
+    def render(self, team: Team, config: GlobalConfig, project: ProjectConfig,
+               root: pathlib.Path, *, check: bool = False) -> list[RenderResult]:
         payload = self._build(team, config)
         path = root / "opencode.json"
         desired = json.dumps(payload, indent=2) + "\n"

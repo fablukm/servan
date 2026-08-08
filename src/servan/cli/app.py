@@ -14,6 +14,7 @@ from ..canary import CanaryReport, CanaryRunner, OpenCodeTrial
 from ..config.errors import ConfigError
 from ..config.loader import ConfigLoader
 from ..config.provider import ProviderConfig, ProviderKind
+from ..config.standards_loader import StandardsLoader
 from ..council import (
     CouncilEngine,
     DispatchVoterBackend,
@@ -38,6 +39,7 @@ from ..observability import (
     WatchError,
     summarize,
 )
+from ..rendering.standards_renderer import render_standards_md
 from ..rendering.sync_service import SyncService
 from ..scaffold import PackagedTemplateSource, ScaffoldError, ScaffoldService
 from ..status import StatusService
@@ -96,6 +98,29 @@ def sync(ctx: typer.Context,
     for result in results:
         typer.echo(f"  {result.summary}")
     typer.echo(f"synced {len(results)} artifacts.")
+
+
+standards_app = typer.Typer(no_args_is_help=True, help="Inspect the standards layer.")
+app.add_typer(standards_app, name="standards")
+
+
+@standards_app.command("list")
+def standards_list(ctx: typer.Context) -> None:
+    """Enumerate the standards available in the global config dir."""
+    loader = StandardsLoader(ConfigLoader(ctx.obj).standards_dir)
+    names = _guarded(loader.available)
+    for name in names:
+        typer.echo(name)
+    if not names:
+        typer.echo("no standards found.")
+
+
+@standards_app.command("show")
+def standards_show(ctx: typer.Context, name: str) -> None:
+    """Print a standard with its `extends` chain merged in (preview)."""
+    loader = StandardsLoader(ConfigLoader(ctx.obj).standards_dir)
+    merged = _guarded(loader.load, name)
+    typer.echo(render_standards_md(merged, (name,)), nl=False)
 
 
 @app.command()

@@ -15,4 +15,5 @@ class ProjectConfig(BaseModel):
 
     profile: str = "local-36gb"
     roles: dict[str, str] = {}
+    standards: tuple[str, ...] = ()
     council: ProjectCouncilConfig = ProjectCouncilConfig()
