@@ -176,7 +176,7 @@ extends = ["base"]          # depth-first; cycles are a ConfigError
 [tooling]      package_manager = "uv" linter = "ruff"
 [dependencies] policy = "..."
 [review]       must_check = [...]
-[forbidden]    literals = ["print("]  rules = [...]  exclude_paths = ["src/*/cli/*"]
+[forbidden]    literals = ["print("]  include = ["*.py"]  rules = [...]  exclude_paths = ["src/*/cli/*"]
 [git]          commit_prefix = "[<task-id>]"  push_by = "human"  rules = [...]
 ```
 
@@ -184,7 +184,8 @@ Merge: `extends` depth-first, then the project's list left->right; **scalars: la
 lists: concatenate + dedupe preserving first occurrence.** `StandardsRenderer` projects the merged
 result into generated `STANDARDS.md` at the project root (do-not-edit header, deterministic order).
 TOML is source of truth; markdown is what agents read; `[forbidden]`/`[tooling]` are the
-machine-checkable subset consumed by `servan check` (S-22).
+machine-checkable subset consumed by `servan check` (S-22). `[forbidden].include` (optional,
+fnmatch globs) scopes the literal grep to matching files — absent means all text files.
 
 ## C. Library — agents and skills
 
@@ -269,3 +270,4 @@ the raw layer; only curated knowledge reaches the wiki.
 - 2026-08-08 S-18 skill library: skills copy VERBATIM (no provenance injection — SKILL.md must stay spec-clean), so local-edit detection uses a composite folder_hash (sorted relpaths + bytes, in lockfile.py beside content_hash); updates mirror the library folder (stale files removed via rmtree+copytree) but only when the install is unmodified; add/remove route by kind (agents -> extra_agents, skills -> [team] skills, both accepted by `library add <name>`); `import --claude` = bare copytree, fail-loud without SKILL.md; `library new skill` scaffolds the Agent-Skills-spec frontmatter (name+description).
 - 2026-08-08 S-20 `servan survey`: file list via `git ls-files -co --exclude-standard` (gitignore-awareness for free, no matcher to maintain) with a junk-dir-skipping rglob fallback for non-git dirs; git stats optional (ProcessError -> git=None — zero-commit repos are an expected case, not an error); the contract's single timestamp lives ONLY in inventory.md (Clock-injected) so inventory.json is byte-identical across runs; <5s acceptance enforced by a test that surveys the servan checkout itself; go.mod parser handles single-line + block require (caught by review smoke).
 - 2026-08-08 S-19 `servan init`: InitService(templates, runner, survey) with side-effect-free plan() / executing apply() returning the same InitAction list (dry-run == real report by construction); TemplateSource ABC gains read_files() (packaged impl via as_file + rglob); LIVE SMOKE CAUGHT: `bd init` appends managed Beads blocks to an existing AGENTS.md -> init runs `bd init --skip-agents` (same flag the servan repo used in S-12) to honor never-touch-existing-files; core.hooksPath is only SET when unset — an existing custom value is kept and reported (non-destructive over contract-literal); _EXECUTABLE_DIRS promoted to public EXECUTABLE_DIRS (shared by new + init).
+- 2026-08-08 S-22 `servan check`: CheckService reuses lint's Finding/Severity (identical report shape) and survey's SKIP_DIRS (no second junk-list); `[forbidden]` gained an optional `include` glob list — WITHOUT it the acceptance is impossible, since prose docs legitimately mention `print(` (literals are code rules; absent include = all text files, contract default); globs use fnmatch semantics (* crosses separators — "tests/*" covers nested); linter evidence accepts [tool.<linter>*] subsections (servan has [tool.ruff.lint.*] but no bare [tool.ruff]); servan's own repo dogfoods via a new root .servan.toml with standards = ["base", "python"].

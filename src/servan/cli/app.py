@@ -11,6 +11,7 @@ import typer
 
 from .. import __version__
 from ..canary import CanaryReport, CanaryRunner, OpenCodeTrial
+from ..check import CheckService
 from ..config.errors import ConfigError
 from ..config.loader import ConfigLoader
 from ..config.provider import ProviderConfig, ProviderKind
@@ -242,6 +243,19 @@ def survey(ctx: typer.Context,
     report = _guarded(collector.collect, project)
     md, js = _guarded(collector.write, report, project / out)
     typer.echo(f"wrote {md} and {js}")
+
+
+@app.command()
+def check(ctx: typer.Context,
+          project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p")) -> None:
+    """Machine-checkable standards: forbidden literals + tooling presence."""
+    findings = _guarded(CheckService(ConfigLoader(ctx.obj)).check, project)
+    for finding in findings:
+        typer.echo(f"{finding.severity.value}: {finding.rule}: "
+                   f"{finding.path}: {finding.message}")
+    if findings:
+        raise typer.Exit(3)
+    typer.echo("check clean.")
 
 
 @app.command()

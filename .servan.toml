@@ -1,0 +1,2 @@
+profile = "local-36gb"
+standards = ["base", "python"]     # dogfooded by `servan check` (S-22)

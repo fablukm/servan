@@ -49,4 +49,5 @@ must_check = [
 
 [forbidden]
 literals = ["key={index}", "dangerouslySetInnerHTML", ": any"]
+include = ["*.ts", "*.tsx", "*.js", "*.jsx"]
 exclude_paths = ["*.test.tsx", "*.test.ts"]

@@ -50,4 +50,5 @@ must_check = [
 
 [forbidden]
 literals = ["print(", "except: pass", "except Exception: pass"]
+include = ["*.py"]
 exclude_paths = ["src/*/cli/*", "tests/*", "scripts/*"]
