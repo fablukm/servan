@@ -43,7 +43,12 @@ from ..observability import (
 )
 from ..rendering.standards_renderer import render_standards_md
 from ..rendering.sync_service import SyncService
-from ..scaffold import PackagedTemplateSource, ScaffoldError, ScaffoldService
+from ..scaffold import (
+    InitService,
+    PackagedTemplateSource,
+    ScaffoldError,
+    ScaffoldService,
+)
 from ..status import StatusService
 from ..survey import SurveyCollector
 from ..team.resolver import Team, TeamResolver
@@ -188,6 +193,22 @@ def library_import(ctx: typer.Context,
     """Import a third-party skill folder into the library, unchanged."""
     path = _guarded(LibraryService(LibraryLoader(ctx.obj)).import_claude, claude)
     typer.echo(f"imported {path}")
+
+
+@app.command()
+def init(project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p"),
+         scan: bool = typer.Option(False, "--scan", help="Also run servan survey."),
+         dry_run: bool = typer.Option(False, "--dry-run",
+                                      help="Print the plan; change nothing.")) -> None:
+    """Non-destructive brownfield scaffold of an existing git repo."""
+    runner = SubprocessRunner()
+    service = InitService(PackagedTemplateSource(), runner,
+                          SurveyCollector(runner, SystemClock()))
+    plan = _guarded(service.plan if dry_run else service.apply, project, scan=scan)
+    for action in plan:
+        typer.echo(action.line)
+    if dry_run:
+        typer.echo("(dry run — nothing written)")
 
 
 @app.command()

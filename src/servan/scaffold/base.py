@@ -13,3 +13,7 @@ class TemplateSource(abc.ABC):
     @abc.abstractmethod
     def copy_tree(self, target: Path) -> None:
         """Copy the full template tree into `target` (which may not exist yet)."""
+
+    @abc.abstractmethod
+    def read_files(self) -> dict[str, bytes]:
+        """All template files as {posix relpath: content} — for non-destructive init."""

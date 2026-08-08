@@ -7,7 +7,7 @@ from ..abstractions import ProcessRunner
 from ..errors import ProcessError
 from .base import ScaffoldError, TemplateSource
 
-_EXECUTABLE_DIRS = (".githooks", "tools")
+EXECUTABLE_DIRS = (".githooks", "tools")  # freshly written files here get +x
 
 
 class ScaffoldService:
@@ -36,7 +36,7 @@ class ScaffoldService:
         return target
 
     def _make_executable(self, target: pathlib.Path) -> None:
-        for dirname in _EXECUTABLE_DIRS:
+        for dirname in EXECUTABLE_DIRS:
             directory = target / dirname
             if not directory.is_dir():
                 continue
