@@ -50,6 +50,15 @@ and permissions come from `.opencode/agent/`; this file is the shared law.
 - Designer output: `specs/design/<feature>-vN.md` with an OKF `supersedes` link;
   architect emits delta beads only.
 
+## Standards & skills
+- `STANDARDS.md` (if present) is generated from the standards TOML named in `.servan.toml`
+  (`standards = [...]`). Read it before writing code; never edit it — `servan sync`
+  regenerates it, and `servan check` enforces its machine-checkable half.
+- Skills are folders under `.opencode/skills/<name>/` (SKILL.md + optional scripts),
+  installed verbatim by `servan sync` from `[team] skills`. OpenCode also reads
+  `.claude/skills/` and `~/.claude/skills/`, so third-party Claude Code skills work
+  unmodified.
+
 ## File ownership
 | Path | Owner | Notes |
 |---|---|---|

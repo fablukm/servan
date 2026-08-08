@@ -1,7 +1,14 @@
 profile = "local-36gb"
 
+# standards = ["base", "python"]   # opt-in house rules: ~/.config/servan/standards/<name>.toml
+                                   # -> `servan sync` generates STANDARDS.md, `servan check` enforces it
+
 [roles]                       # per-project overrides, e.g.:
 # engineer = "api/glm"
+
+# [team]                      # installed from the library on `servan sync` (see: servan library list):
+# extra_agents = ["math-sme"]      # needs a model: [roles] math-sme = "local/reasoner"
+# skills = ["react-quality"]       # copied verbatim to .opencode/skills/react-quality/
 
 [council]
 enabled = true
