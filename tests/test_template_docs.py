@@ -43,3 +43,13 @@ def test_examples_library_seeds_are_valid():
     source = loader.agent_source("math-sme")
     assert "\nmodel:" in source                            # sync requires a model: line
     assert "name: react-quality" in loader.skills()["react-quality"].read_text()
+
+
+def test_readme_documents_v05_commands_and_walkthroughs():
+    readme = (pathlib.Path(__file__).resolve().parents[1] / "README.md").read_text()
+    for command in ("servan init", "servan survey", "servan standards",
+                    "servan check", "servan library"):
+        assert command in readme, command
+    assert "--dry-run" in readme                           # brownfield walkthrough
+    assert "@product" in readme                            # greenfield interview walkthrough
+    assert ".claude/skills" in readme                      # skills compatibility note
