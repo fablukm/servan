@@ -53,3 +53,7 @@ def test_readme_documents_v05_commands_and_walkthroughs():
     assert "--dry-run" in readme                           # brownfield walkthrough
     assert "@product" in readme                            # greenfield interview walkthrough
     assert ".claude/skills" in readme                      # skills compatibility note
+    assert "## How it works" in readme                     # agent roster + the loop
+    assert "## Where you interact" in readme              # human/servan touchpoints
+    assert "## Scenarios" in readme and "@surveyor" in readme
+    assert "git config --unset core.hooksPath" in readme   # leave-no-trace removal

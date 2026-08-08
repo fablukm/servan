@@ -42,20 +42,24 @@ policy `profiles.toml` · instance `<repo>/.servan.toml` · economics `prices.to
 (opt-in per project) · library `library/` (reusable agents + skills) — split by *why it changes*.
 Examples in `examples/config/`, `examples/standards/`, `examples/library/`.
 
-## Two ways in
+## Scenarios
 
-**Greenfield** — scaffold, then let `@product` interview you (max 2 bounded rounds) into a
-vision, a milestone roadmap, and a prioritized backlog:
+**"I have an idea" (greenfield)** — scaffold, get interviewed, approve the plan, click go:
 
 ```bash
 servan new myapp && cd myapp
 # edit .servan.toml: standards = ["base", "python"], maybe [team] skills = ["react-quality"]
 servan sync          # generates STANDARDS.md + installs library items
-opencode             # talk to @product, review wiki/roadmap.md, then let the team run
+opencode             # 1. @product interviews you (≤2 bounded rounds, defaults recorded
+                     #    as `assumed:`) and writes wiki/vision.md + wiki/roadmap.md +
+                     #    the epic/feature backlog in bd
+                     # 2. you review wiki/roadmap.md — the planning gate
+                     # 3. give the orchestrator the standing order; the team runs the
+                     #    backlog bead by bead
 ```
 
-**Brownfield** — adopt an existing repo without overwriting anything; machine facts first,
-model judgment second:
+**"Extend my existing repo — and leave no trace" (brownfield, reversible)** — adoption is
+non-destructive (existing files are never overwritten) and fully removable:
 
 ```bash
 cd existing-repo
@@ -64,7 +68,46 @@ servan init --scan             # only-missing template files + raw/survey/invent
 servan sync && opencode        # @surveyor analyses the inventory, @product interviews, ...
 ```
 
+Everything servan adds lives in well-known paths: `AGENTS.servan.md`, `.servan.toml`,
+`.githooks/`, `.opencode/`, `tools/`, `wiki/`, `specs/`, `raw/`, `STANDARDS.md`,
+`opencode.json`, `.servan/`, `.beads/`, plus one marked block in `.gitignore`
+(`# --- servan ---`). To remove every trace: delete those paths, delete the marked block,
+`git config --unset core.hooksPath`. Your original files were never touched.
+
 Full walkthroughs: `docs/IMPLEMENTATION-MANUAL-v05.md` §5.
+
+## How it works
+
+You talk to **one** agent; the team never talks to itself — every exchange is
+orchestrator → subagent → one distilled result.
+
+| Role | Job |
+|---|---|
+| **orchestrator** | The primary agent you drive; dispatches one bead at a time |
+| **product** | Interviews you, owns `wiki/vision.md` + `wiki/roadmap.md` + the backlog |
+| **architect** | Technical decomposition, one feature at a time, just-in-time |
+| **engineer / tester / reviewer / data** | Implement · test-first · review · data work |
+| **designer / researcher** | Design specs from `raw/design/` · web/document research |
+| **librarian** | The only wiki writer: ingests results into OKF-linted pages |
+| **surveyor** | Read-only brownfield analyst (`raw/survey/analysis.md`) |
+
+The loop around them is deterministic and file-backed: tasks live in **bd** (ready queue =
+execution order), durable knowledge lives in the **wiki** (OKF frontmatter, `servan lint`),
+house rules in generated **STANDARDS.md** (`servan check` enforces the machine half),
+contested designs go to a **council** vote with preserved dissent, model swaps must pass a
+golden-bead **canary**, and `servan watch`/`cost` observe it all.
+
+## Where you interact
+
+| Moment | What happens |
+|---|---|
+| Planning interview | `@product` asks only decision-changing questions (≤7, then ≤4) |
+| Planning gate | You review `wiki/roadmap.md` + `bd list`, then say go |
+| Standing order | You hand the orchestrator the autonomous-loop rules once |
+| Council escalation | A deadlocked contested spec exits 4 with one question for you |
+| Canary verdict | You approve or reject a model swap from the pass-rate table |
+| Quality gates | `lint`/`check`/`sync --check` exit 3 — you fix and re-run |
+| Git | Agents commit on feature branches; **only you ever push** |
 
 ## Quickstart
 
