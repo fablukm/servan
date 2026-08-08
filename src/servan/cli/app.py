@@ -139,11 +139,11 @@ def library_list(ctx: typer.Context,
     """Show library agents and skills, with installed/available state for this project."""
     loader = LibraryLoader(ctx.obj)
     config = _guarded(lambda: ConfigLoader(ctx.obj).load_project(project))
+    installed = {"agents": config.team.extra_agents, "skills": config.team.skills}
     for kind, items in (("agents", loader.agents()), ("skills", loader.skills())):
         typer.echo(f"{kind}:")
         for name in items:
-            state = "installed" if kind == "agents" and name in config.team.extra_agents \
-                else "available"
+            state = "installed" if name in installed[kind] else "available"
             typer.echo(f"  {name} ({state})")
         if not items:
             typer.echo("  (none)")
@@ -167,14 +167,26 @@ def library_remove(ctx: typer.Context, name: str,
 
 @library_app.command("new")
 def library_new(ctx: typer.Context, kind: str, name: str) -> None:
-    """Scaffold a new library entry: `servan library new agent <name>`."""
+    """Scaffold a new library entry: `servan library new agent|skill <name>`."""
     service = LibraryService(LibraryLoader(ctx.obj))
-    if kind != "agent":
-        typer.secho(f"servan: unknown library kind '{kind}' — supported: agent",
+    if kind == "agent":
+        path = _guarded(service.new_agent, name)
+    elif kind == "skill":
+        path = _guarded(service.new_skill, name)
+    else:
+        typer.secho(f"servan: unknown library kind '{kind}' — supported: agent, skill",
                     fg="red", err=True)
         raise typer.Exit(2)
-    path = _guarded(service.new_agent, name)
     typer.echo(f"created {path}")
+
+
+@library_app.command("import")
+def library_import(ctx: typer.Context,
+                   claude: pathlib.Path = typer.Option(..., "--claude",
+                                                       help="Claude Code skill folder to copy in.")) -> None:
+    """Import a third-party skill folder into the library, unchanged."""
+    path = _guarded(LibraryService(LibraryLoader(ctx.obj)).import_claude, claude)
+    typer.echo(f"imported {path}")
 
 
 @app.command()

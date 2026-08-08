@@ -5,13 +5,14 @@ from __future__ import annotations
 
 import pathlib
 import re
+import shutil
 
 from ..abstractions import Clock
 from ..config.errors import ConfigError
 from ..config.global_config import GlobalConfig
 from ..config.project_config import ProjectConfig
 from ..library.loader import LibraryLoader
-from ..library.lockfile import LibraryLock, LockEntry, content_hash
+from ..library.lockfile import LibraryLock, LockEntry, content_hash, folder_hash
 from ..logging_setup import get_logger
 from ..team.resolver import Team
 from .base import MODEL_LINE, Renderer, RenderResult
@@ -31,7 +32,7 @@ class LibraryRenderer(Renderer):
                root: pathlib.Path, *, check: bool = False, force: bool = False
                ) -> list[RenderResult]:
         results: list[RenderResult] = []
-        if not project.team.extra_agents:
+        if not project.team.extra_agents and not project.team.skills:
             return results
         lock = LibraryLock.load(root)
         dirty = False
@@ -66,9 +67,46 @@ class LibraryRenderer(Renderer):
             dirty = True
             _log.info("installed library agent '%s' -> %s", name, path)
             results.append(RenderResult(path=path, summary=summary))
+        for name in sorted(project.team.skills):
+            result, installed = self._render_skill(name, root, lock, check=check, force=force)
+            dirty = dirty or installed
+            results.append(result)
         if dirty:
             lock.save(root)
         return results
+
+    def _render_skill(self, name: str, root: pathlib.Path, lock: LibraryLock,
+                      *, check: bool, force: bool) -> tuple[RenderResult, bool]:
+        """Verbatim folder copy; no header injection (SKILL.md stays spec-clean)."""
+        source = self._loader.skill_source_dir(name)
+        desired = folder_hash(source)
+        target = root / ".opencode/skills" / name
+        key = f"skill:{name}"
+        entry = lock.installs.get(key)
+        current = folder_hash(target) if target.is_dir() else None
+        managed = entry is not None and current is not None and current == entry.sha256
+        summary = f"library skill {name} -> .opencode/skills/{name}"
+        if current is not None and current == desired and managed:
+            return RenderResult(path=target, summary=f"library skill {name} in sync",
+                                changed=False), False
+        if current is not None and not managed and not force:
+            note = "local edits" if entry else "no lock entry"
+            _log.info("kept %s (%s)", target, note)
+            return RenderResult(path=target, summary=f"library skill {name} kept ({note})",
+                                changed=False), False
+        if check:
+            return RenderResult(path=target, summary=summary, changed=True), False
+        if target.is_dir():
+            shutil.rmtree(target)
+        elif target.exists():
+            target.unlink()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(source, target)
+        lock.installs[key] = LockEntry(kind="skill", source=f"skills/{name}",
+                                       date=self._clock.now().date().isoformat(),
+                                       sha256=desired)
+        _log.info("installed library skill '%s' -> %s", name, target)
+        return RenderResult(path=target, summary=summary), True
 
     def _desired(self, name: str, qualified_id: str) -> str:
         source = self._loader.agent_source(name)

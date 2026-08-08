@@ -14,6 +14,7 @@ class ProjectTeamConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     extra_agents: tuple[str, ...] = ()
+    skills: tuple[str, ...] = ()
 
 
 class ProjectConfig(BaseModel):

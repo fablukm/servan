@@ -40,3 +40,10 @@ class LibraryLoader:
             raise ConfigError(f"unknown library agent '{name}' — available: "
                               f"{', '.join(agents) or 'none'} ({self._dir / 'agents'})")
         return agents[name].read_text(encoding="utf-8")
+
+    def skill_source_dir(self, name: str) -> pathlib.Path:
+        skills = self.skills()
+        if name not in skills:
+            raise ConfigError(f"unknown library skill '{name}' — available: "
+                              f"{', '.join(skills) or 'none'} ({self._dir / 'skills'})")
+        return skills[name].parent

@@ -16,6 +16,18 @@ def content_hash(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
 
 
+def folder_hash(folder: pathlib.Path) -> str:
+    """Deterministic composite hash of a directory tree (relpaths + bytes)."""
+    digest = hashlib.sha256()
+    for path in sorted(folder.rglob("*")):
+        if path.is_file():
+            digest.update(path.relative_to(folder).as_posix().encode())
+            digest.update(b"\0")
+            digest.update(path.read_bytes())
+            digest.update(b"\0")
+    return digest.hexdigest()
+
+
 class LockEntry(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 

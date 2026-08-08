@@ -127,7 +127,7 @@ def test_add_is_idempotent_and_validates(library_dir, tmp_path):
     assert 'extra_agents = ["math-sme"]' in first
     service.add(root, "math-sme")
     assert (root / ".servan.toml").read_text() == first           # idempotent
-    with pytest.raises(ConfigError, match="unknown library agent 'nope'"):
+    with pytest.raises(ConfigError, match="unknown library item 'nope'"):
         service.add(root, "nope")
 
 
