@@ -33,5 +33,10 @@ class TeamResolver:
             team[role] = ResolvedModel.from_spec(alias, spec, self._config.providers[spec.provider])
         if "orchestrator" not in team:
             raise ConfigError(f"profile '{project.profile}' defines no 'orchestrator' role")
+        for name in project.team.extra_agents:
+            if name not in team:
+                raise ConfigError(
+                    f"extra agent '{name}' has no model — add to .servan.toml: "
+                    f"[roles] {name} = \"<alias>\"")
         _log.info("resolved team for profile '%s': %d roles", project.profile, len(team))
         return team

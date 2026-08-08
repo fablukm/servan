@@ -17,7 +17,7 @@ _log = get_logger("rendering.opencode_json")
 
 class OpencodeJsonRenderer(Renderer):
     def render(self, team: Team, config: GlobalConfig, project: ProjectConfig,
-               root: pathlib.Path, *, check: bool = False) -> list[RenderResult]:
+               root: pathlib.Path, *, check: bool = False, force: bool = False) -> list[RenderResult]:
         payload = self._build(team, config)
         path = root / "opencode.json"
         desired = json.dumps(payload, indent=2) + "\n"

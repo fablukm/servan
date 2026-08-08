@@ -2,22 +2,19 @@
 from __future__ import annotations
 
 import pathlib
-import re
 
 from ..config.global_config import GlobalConfig
 from ..config.project_config import ProjectConfig
 from ..logging_setup import get_logger
 from ..team.resolver import Team
-from .base import Renderer, RenderResult
+from .base import MODEL_LINE, Renderer, RenderResult
 
 _log = get_logger("rendering.agent_frontmatter")
-
-_MODEL_LINE = re.compile(r"(?m)^model:.*$")
 
 
 class AgentFrontmatterRenderer(Renderer):
     def render(self, team: Team, config: GlobalConfig, project: ProjectConfig,
-               root: pathlib.Path, *, check: bool = False) -> list[RenderResult]:
+               root: pathlib.Path, *, check: bool = False, force: bool = False) -> list[RenderResult]:
         results: list[RenderResult] = []
         agent_dir = self._agent_dir(root)
         if agent_dir is None:
@@ -29,7 +26,7 @@ class AgentFrontmatterRenderer(Renderer):
                 _log.debug("no agent file for role '%s' — skipped", role)
                 continue
             summary = f"{role} -> {model.qualified_id}"
-            desired = _MODEL_LINE.sub(f"model: {model.qualified_id}", path.read_text())
+            desired = MODEL_LINE.sub(f"model: {model.qualified_id}", path.read_text())
             if check:
                 changed = path.read_text() != desired
                 results.append(RenderResult(path=path, summary=summary, changed=changed))

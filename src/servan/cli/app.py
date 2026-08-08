@@ -27,6 +27,8 @@ from ..council import (
 from ..errors import ServanError
 from ..infrastructure import SubprocessRunner, SystemClock
 from ..ledger import BeadsLedger, LedgerError
+from ..library.loader import LibraryLoader
+from ..library.service import LibraryService
 from ..lint import LintEngine, Severity
 from ..logging_setup import configure_logging, get_logger
 from ..observability import (
@@ -83,10 +85,12 @@ def _main(ctx: typer.Context,
 def sync(ctx: typer.Context,
          project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p"),
          check: bool = typer.Option(False, "--check",
-                                    help="Diff-only: write nothing, exit 3 on drift.")) -> None:
+                                    help="Diff-only: write nothing, exit 3 on drift."),
+         force: bool = typer.Option(False, "--force",
+                                    help="Overwrite locally modified library installs.")) -> None:
     """Render layered TOML config -> opencode.json + agent model lines."""
     service = SyncService(ConfigLoader(ctx.obj))
-    results = _guarded(service.sync, project, check=check)
+    results = _guarded(service.sync, project, check=check, force=force)
     if check:
         drifted = [r for r in results if r.changed]
         for result in drifted:
@@ -121,6 +125,56 @@ def standards_show(ctx: typer.Context, name: str) -> None:
     loader = StandardsLoader(ConfigLoader(ctx.obj).standards_dir)
     merged = _guarded(loader.load, name)
     typer.echo(render_standards_md(merged, (name,)), nl=False)
+
+
+library_app = typer.Typer(no_args_is_help=True,
+                          help="Mother library of reusable agents and skills.")
+app.add_typer(library_app, name="library")
+
+
+@library_app.command("list")
+def library_list(ctx: typer.Context,
+                 project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p")
+                 ) -> None:
+    """Show library agents and skills, with installed/available state for this project."""
+    loader = LibraryLoader(ctx.obj)
+    config = _guarded(lambda: ConfigLoader(ctx.obj).load_project(project))
+    for kind, items in (("agents", loader.agents()), ("skills", loader.skills())):
+        typer.echo(f"{kind}:")
+        for name in items:
+            state = "installed" if kind == "agents" and name in config.team.extra_agents \
+                else "available"
+            typer.echo(f"  {name} ({state})")
+        if not items:
+            typer.echo("  (none)")
+
+
+@library_app.command("add")
+def library_add(ctx: typer.Context, name: str,
+                project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p")
+                ) -> None:
+    """Add a library agent to [team] extra_agents; it installs on the next sync."""
+    typer.echo(_guarded(LibraryService(LibraryLoader(ctx.obj)).add, project, name))
+
+
+@library_app.command("remove")
+def library_remove(ctx: typer.Context, name: str,
+                   project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p")
+                   ) -> None:
+    """Remove a library agent from [team]; deletes the install unless locally modified."""
+    typer.echo(_guarded(LibraryService(LibraryLoader(ctx.obj)).remove, project, name))
+
+
+@library_app.command("new")
+def library_new(ctx: typer.Context, kind: str, name: str) -> None:
+    """Scaffold a new library entry: `servan library new agent <name>`."""
+    service = LibraryService(LibraryLoader(ctx.obj))
+    if kind != "agent":
+        typer.secho(f"servan: unknown library kind '{kind}' — supported: agent",
+                    fg="red", err=True)
+        raise typer.Exit(2)
+    path = _guarded(service.new_agent, name)
+    typer.echo(f"created {path}")
 
 
 @app.command()

@@ -10,10 +10,17 @@ class ProjectCouncilConfig(BaseModel):
     enabled: bool = True
 
 
+class ProjectTeamConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    extra_agents: tuple[str, ...] = ()
+
+
 class ProjectConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     profile: str = "local-36gb"
     roles: dict[str, str] = {}
     standards: tuple[str, ...] = ()
+    team: ProjectTeamConfig = ProjectTeamConfig()
     council: ProjectCouncilConfig = ProjectCouncilConfig()

@@ -36,7 +36,7 @@ class StandardsRenderer(Renderer):
         self._loader = loader
 
     def render(self, team: Team, config: GlobalConfig, project: ProjectConfig,
-               root: pathlib.Path, *, check: bool = False) -> list[RenderResult]:
+               root: pathlib.Path, *, check: bool = False, force: bool = False) -> list[RenderResult]:
         if not project.standards:
             return []
         desired = render_standards_md(self._loader.load_all(project.standards), project.standards)
