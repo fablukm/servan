@@ -45,6 +45,7 @@ from ..rendering.standards_renderer import render_standards_md
 from ..rendering.sync_service import SyncService
 from ..scaffold import PackagedTemplateSource, ScaffoldError, ScaffoldService
 from ..status import StatusService
+from ..survey import SurveyCollector
 from ..team.resolver import Team, TeamResolver
 
 app = typer.Typer(no_args_is_help=True, add_completion=False, invoke_without_command=True,
@@ -209,6 +210,17 @@ def status(project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", 
         return
     target = _guarded(service.write, project)
     typer.echo(f"wrote {target}")
+
+
+@app.command()
+def survey(ctx: typer.Context,
+           project: pathlib.Path = typer.Option(pathlib.Path("."), "--project", "-p"),
+           out: pathlib.Path = typer.Option(pathlib.Path("raw/survey"), "--out")) -> None:
+    """Deterministic repo inventory -> raw/survey/inventory.{md,json}. No LLM, no network."""
+    collector = SurveyCollector(SubprocessRunner(), SystemClock())
+    report = _guarded(collector.collect, project)
+    md, js = _guarded(collector.write, report, project / out)
+    typer.echo(f"wrote {md} and {js}")
 
 
 @app.command()
